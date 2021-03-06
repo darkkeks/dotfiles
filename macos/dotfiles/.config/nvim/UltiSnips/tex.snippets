@@ -1,0 +1,329 @@
+global !p
+texMathZones = ['texMathZone'+x for x in ['A', 'AS', 'B', 'BS', 'C', 'CS', 'D', 'DS', 'E', 'ES', 'F', 'FS', 'G', 'GS', 'H', 'HS', 'I', 'IS', 'J', 'JS', 'K', 'KS', 'L', 'LS', 'DS', 'V', 'W', 'X', 'Y', 'Z']]
+
+texIgnoreMathZones = ['texMathText']
+
+texMathZoneIds = vim.eval('map('+str(texMathZones)+", 'hlID(v:val)')")
+texIgnoreMathZoneIds = vim.eval('map('+str(texIgnoreMathZones)+", 'hlID(v:val)')")
+
+ignore = texIgnoreMathZoneIds[0]
+
+def math():
+	return True
+	synstackids = vim.eval("synstack(line('.'), col('.') - (col('.')>=2 ? 1 : 0))")
+	try:
+		first = next(i for i in reversed(synstackids) if i in texIgnoreMathZoneIds or i in texMathZoneIds)
+		return first != ignore
+	except StopIteration:
+		return False
+endglobal
+
+snippet homework "Homework header" b
+\documentclass[a4paper]{article}
+\usepackage{header}
+
+\title{$1}
+\author{Бобень Вячеслав}
+
+\begin{document}
+	\maketitle
+	$0
+\end{document}
+endsnippet
+
+snippet beg "begin{} / end{}" bA
+\begin{$1}
+	${0:${VISUAL}}
+\end{$1}
+endsnippet
+
+snippet mk "Inline math" wA
+$${1}$$2
+endsnippet
+
+snippet dm "Display math" 
+\begin{equation*}
+	${0:${VISUAL}}
+.\end{equation*}
+endsnippet
+
+
+# Environments 
+snippet enum "Enumerate" bA
+\begin{enumerate}
+\item $0
+\end{enumerate}
+endsnippet
+
+snippet item "Itemize" bA
+\begin{itemize}
+\item $0
+\end{itemize}
+endsnippet
+
+snippet desc "Description" bA
+\begin{description}
+\item[$1] $0
+\end{description}
+endsnippet
+
+snippet ali "Align" bA
+\begin{align*}
+	${0:${VISUAL}}
+.\end{align*}
+endsnippet
+
+#Symbols
+context "math()"
+snippet => "\implies" iA
+\implies
+endsnippet
+
+context "math()"
+snippet -> "\to" iA
+\to
+endsnippet
+
+context "math()"
+snippet -p> "partial function" iA
+\overset{p}{\to}
+endsnippet
+
+context "math()"
+snippet ... "\dots" iA
+\dots
+endsnippet
+
+context "math()"
+snippet iff "\iff" iA
+\iff
+endsnippet
+
+context "math()"
+snippet lra "\leftrightarrow" iA
+\leftrightarrow
+endsnippet
+
+context "math()"
+snippet xor "\oplus" iA
+\oplus
+endsnippet
+
+context "math()"
+snippet != "\neq" iA
+\neq
+endsnippet
+
+context "math()"
+snippet vmat "vmatrix" iA
+\begin{vmatrix} $1 \end{vmatrix}$0
+endsnippet
+
+context "math()"
+snippet pmat "pmatrix" iA
+\begin{pmatrix} $1 \end{pmatrix}$0
+endsnippet
+
+context "math()"
+snippet // "Frac" iA
+\frac{${1:${VISUAL}}}{$2}$0
+endsnippet
+
+snippet () "Math braces" i
+\left(${1:${VISUAL}}\right)$0
+endsnippet
+
+snippet || "Math braces" i
+\left|${1:${VISUAL}}\right|$0
+endsnippet
+
+snippet [] "Math braces" i
+\left[${1:${VISUAL}}\right]$0
+endsnippet
+
+snippet {} "Math braces" i
+\left\\{${1:${VISUAL}}\right\\}$0
+endsnippet
+
+snippet <> "Math braces" i
+\left< ${1:${VISUAL}} \right>$0
+endsnippet
+
+snippet sum "Sum" w
+\sum_{${1:i} = ${2:1}}^{${3:n}}$0
+endsnippet
+
+context "math()"
+snippet st "\sqrt" iA
+\sqrt{${1:${VISUAL}}}$0
+endsnippet
+
+context "math()"
+snippet sr "^2" iA
+^2
+endsnippet 
+
+context "math()"
+snippet cb "^3" iA
+^3
+endsnippet 
+
+context "math()"
+snippet pw "^{}" iA
+^{$1}$0
+endsnippet
+
+snippet __ "_{}" iA
+_{$1}$0
+endsnippet
+
+context "math()"
+snippet <= "\leq" iA
+\leq
+endsnippet
+
+context "math()"
+snippet >= "\geq" iA
+\geq
+endsnippet
+
+context "math()"
+snippet EE "\exists" iA
+\exists
+endsnippet
+
+context "math()"
+snippet AA "\forall" iA 
+\forall
+endsnippet
+
+context "math()"
+snippet PP "\Prob" iA 
+\Prob
+endsnippet
+
+context "math()"
+snippet xx "\times" iA
+\times
+endsnippet
+
+context "math()"
+snippet ** "\cdot" iA 
+\cdot
+endsnippet
+
+context "math()"
+snippet rev "^-1" iA
+^{-1}$0
+endsnippet
+
+context "math()"
+snippet tt "\text" iA
+\text{${1:${VISUAL}}}$0
+endsnippet
+
+context "math()"
+snippet cases "cases" wA
+\begin{cases}
+	$0
+\end{cases}
+endsnippet
+
+context "math()"
+snippet bar "bar" iA
+\overline{${1:${VISUAL}}}$0
+endsnippet
+
+context "math()"
+snippet arr "arr" iA
+\overrightarrow{${1:${VISUAL}}}$0
+endsnippet
+
+context "math()"
+snippet hat "hat" iA
+\hat{${1:${VISUAL}}}$0
+endsnippet
+
+snippet bf "Bold" i
+\textbf{${1:${VISUAL}}}$0
+endsnippet
+
+snippet it "Italic" i
+\textit{${1:${VISUAL}}}$0
+endsnippet
+
+priority 100
+context "math()"
+snippet "([a-zA-Z])bar" "bar" riA
+\overline{`!p snip.rv=match.group(1)`}
+endsnippet
+
+priority 100
+context "math()"
+snippet "([a-zA-Z\d])arr" "arr" riA
+\overrightarrow{`!p snip.rv=match.group(1)`}$0
+endsnippet
+
+priority 100
+context "math()"
+snippet "([a-zA-Z])hat" "hat" riA
+\hat{`!p snip.rv=match.group(1)`}
+endsnippet
+
+snippet notin "not in " iA
+\notin 
+endsnippet
+
+context "math()"
+snippet sett "set" wA
+\\{$1\\}$0
+endsnippet
+
+context "math()"
+snippet inf "\infty" iA
+\infty
+endsnippet
+
+context "math()"
+snippet \\\ "setminus" iA
+\setminus
+endsnippet
+
+context "math()"
+snippet !> "\mapsto" iA
+\mapsto
+endsnippet
+
+snippet lim "limit" w
+\lim_{${1:n} \to ${2:\infty}}$0
+endsnippet
+
+snippet uu "\cup" iA
+\cup
+endsnippet
+
+snippet nn "\cap" iA
+\cap
+endsnippet
+
+snippet OO "Empty set" iA
+\varnothing
+endsnippet
+
+snippet qss "\subseteq" iA
+\subseteq
+endsnippet
+
+priority 10
+snippet ss "\subsetneq" iA
+\subsetneq
+endsnippet
+
+priority 100
+snippet !ss "\nsubseteq" iA
+\nsubseteq
+endsnippet
+
+snippet :: "\colon" iA
+\colon
+endsnippet
