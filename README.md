@@ -18,9 +18,11 @@
   - Magnet из AppStore
   - Telegram Desktop
   - Нужные jdk
-- Добавить .ssh ключ
-- `git clone git@github.com:darkkeks/dotfiles.git`
-- `./restow.sh`
-- `brew bundle install --file ~/.Brewfile`
-- export + import настроек intellij idea
+- Конфиги
+  - Добавить .ssh ключ
+  - `git clone git@github.com:darkkeks/dotfiles.git`
+  - `./restow.sh`
+  - `brew bundle install --file ~/.Brewfile`
+- export + import настроек IntelliJ
+- export + import настроек iTerm2
 - docker login
