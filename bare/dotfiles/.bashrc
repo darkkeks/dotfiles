@@ -30,3 +30,5 @@ alias vim='nvim'
 # git aliases
 [[ -r ~/bin/git_alias.sh ]] && . ~/bin/git_alias.sh
 
+# add cargo to PATH
+[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
