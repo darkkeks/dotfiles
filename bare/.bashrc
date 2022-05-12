@@ -1,9 +1,6 @@
 # .bashrc can be sourced in login non-interactive session
 # dont do anything if that is the case
-case $- in
-    *i*) ;;
-      *) return;;
-esac
+[[ $- != *i* ]] && return
 
 # don't put duplicate lines or lines starting with space in the history.
 HISTCONTROL=ignoreboth
@@ -30,6 +27,12 @@ alias egrep='egrep --color=auto'
 # general aliases
 alias ll='ls -lah'
 alias vim='nvim'
+
+# add local bin directory to PATH
+PATH="$PATH:~/bin"
+
+# add python local bin directory to PATH
+[[ -d ~/.local/bin ]] && PATH="$PATH:~/.local/bin"
 
 # git aliases
 [[ -r ~/bin/git_alias.sh ]] && . ~/bin/git_alias.sh
