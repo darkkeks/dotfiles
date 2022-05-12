@@ -1,0 +1,81 @@
+## PATH
+
+# Explicitly set default jdk
+JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-11.yandex
+PATH="$JAVA_PATH/bin:$PATH"
+
+# Add ya arcadia to PATH
+PATH="$PATH:~/bin/arcadia"
+
+# Add yc to PATH
+[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:~/yandex-cloud/bin"
+
+# Get brew prefix for adding packages to PATH
+# BREW_PREFIX=$(brew --prefix)  (50ms)
+BREW_PREFIX="/usr/local"
+
+# Override coreutils, grep with gnu version
+PATH="$BREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
+PATH="$BREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
+
+# Use llvm clang, instead of apple clang
+PATH="$BREW_PREFIX/opt/llvm/bin:$PATH"
+LDFLAGS="-L$BREW_PREFIX/opt/llvm/lib"
+CPPFLAGS="-I$BREW_PREFIX/opt/llvm/include"
+
+# Add nvm to PATH, and load completion
+# (takes > 100ms, so should be used on demand)
+function init-nvm {
+    [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ] && \
+        . "$BREW_PREFIX/opt/nvm/nvm.sh"
+    [ -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \
+        . "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+}
+
+## ARC
+
+ARC_DIR=~/repo
+ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff)
+
+alias r1="cd $ARC_DIR/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
+alias r2="cd $ARC_DIR/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
+alias r3="cd $ARC_DIR/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
+alias r4="cd $ARC_DIR/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
+alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
+
+function mount-all {
+    arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
+    arc mount -m "$ARC_DIR/a2" -S "$ARC_DIR/s2" --object-store "$ARC_DIR/object-store"
+    arc mount -m "$ARC_DIR/a3" -S "$ARC_DIR/s3" --object-store "$ARC_DIR/object-store"
+    arc mount -m "$ARC_DIR/a4" -S "$ARC_DIR/s4" --object-store "$ARC_DIR/object-store"
+    arc mount -m "$ARC_DIR/at" -S "$ARC_DIR/st" --object-store "$ARC_DIR/object-store"
+}
+
+## SSH
+
+function colored-ssh {
+    color=$1; shift
+    [[ -z $color ]] || iterm-tab-colors $color
+    ssh $@
+    [[ -z $color ]] || iterm-tab-colors
+}
+
+PPCDEV_COLORS=(f94144 f3722c f8961e f9c74f 90be6d 43aa8b 577590)
+
+for i in {1..7}; do
+    alias "ppc$i"="colored-ssh ${PPCDEV_COLORS[$(($i - 1))]} ppcdev$i"
+done
+
+## OTHER
+
+# Default executer config is in /etc
+EXECUTER_CONF=~/.executer.conf
+# WA for executer not working on macos
+export PERL_LWP_SSL_VERIFY_HOSTNAME=0
+
+# Add yandex internal certificate for node
+# Fixes "self signed certificate in chain" errors
+export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
+
+# Alias for unused-code sub-issues
+alias unused-code="create-issue.py -p DIRECT-164934 -s "$1" -c --do"

@@ -1,5 +1,9 @@
 # Мои конфиги, которые не хочется терять
 
+## bare
+
+Общее для macos/linux/wsl
+
 ### Новый мак:
 - В System Preferences
   - Добавить русский язык
@@ -23,6 +27,7 @@
   - `git clone git@github.com:darkkeks/dotfiles.git`
   - `./restow.sh`
   - `brew bundle install --file ~/.Brewfile`
+- Сделать brew bash дефолтным шеллом (`/etc/shells` + `chsh -s`)
 - export + import настроек IntelliJ
 - export + import настроек iTerm2
 - docker login

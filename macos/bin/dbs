@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Connect to unit-tests database
+
+set -eo pipefail
+
+container=$(docker ps | grep dbschema | awk '{print $1}')
+
+if [ -z "$container" ]; then
+    echo 'No container was found (check docker ps)'
+    return
+fi
+
+docker exec -it $container mysql -u root $@

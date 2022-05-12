@@ -1,4 +1,5 @@
-# If not running interactively, don't do anything
+# .bashrc can be sourced in login non-interactive session
+# dont do anything if that is the case
 case $- in
     *i*) ;;
       *) return;;
@@ -14,10 +15,13 @@ shopt -s histappend
 HISTSIZE=100000
 HISTFILESIZE=200000
 
-# set a fancy prompt
+# use vim as default editor
+EDITOR=vim
+
+# set a fancy prompt (without hostname)
 PS1='\[\033[01;32m\]\u\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 
-# enable color support of ls and also add handy aliases
+# enable color support for ls and grep
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
@@ -31,4 +35,7 @@ alias vim='nvim'
 [[ -r ~/bin/git_alias.sh ]] && . ~/bin/git_alias.sh
 
 # add cargo to PATH
-[[ -f "$HOME/.cargo/env" ]] && . "$HOME/.cargo/env"
+[[ -f ~/.cargo/env ]] && . ~/.cargo/env
+
+# source macos-specific bashrc
+[[ -f ~/.bashrc_macos ]] && . ~/.bashrc_macos

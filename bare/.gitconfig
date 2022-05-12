@@ -1,7 +1,6 @@
 [user]
-	emain = darkkeks@rambler.ru
-	email = darkkeks@rambler.ru
 	name = darkkeks
+	email = darkkeks@rambler.ru
 [filter "lfs"]
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f

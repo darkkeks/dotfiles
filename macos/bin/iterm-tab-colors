@@ -1,4 +1,3 @@
-
 # from https://github.com/bernardop/iterm-tab-color-oh-my-zsh/blob/master/iterm-tab-color.plugin.zsh
 function iterm_tab_color() {
   if [ $# -eq 0 ]; then
