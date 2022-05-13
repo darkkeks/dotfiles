@@ -40,5 +40,5 @@ PATH="$PATH:~/bin"
 # add cargo to PATH
 [[ -f ~/.cargo/env ]] && . ~/.cargo/env
 
-# source macos-specific bashrc
-[[ -f ~/.bashrc_macos ]] && . ~/.bashrc_macos
+# source host-specific bashrc
+[[ -f ~/.bashrc_local ]] && . ~/.bashrc_local
