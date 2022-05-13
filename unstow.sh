@@ -1,16 +1,17 @@
 #!/bin/bash
 
+ACTION="--delete bare"
+
 case "$1" in
-    macos)
-        ACTION="--delete bare --delete macos"
+    "")
         ;;
 
-    bare)
-        ACTION="--delete bare"
+    macos)
+        ACTION="$ACTION --delete macos"
         ;;
 
     *)
-        echo "Usage: $0 [macos|bare]"
+        echo "Usage: $0 [macos]"
         exit
 esac
 

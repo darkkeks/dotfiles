@@ -1,17 +1,19 @@
 #!/bin/bash
 
+ACTION="--restow bare"
+
 case "$1" in
-    macos)
-        ACTION="--restow bare --restow macos"
+    "")
         ;;
 
-    bare)
-        ACTION="--restow bare"
+    macos)
+        ACTION="$ACTION --restow macos"
         ;;
 
     *)
-        echo "Usage: $0 [macos|bare]"
+        echo "Usage: $0 [macos]"
         exit
 esac
 
 stow -v --target $HOME --no-folding $ACTION
+
