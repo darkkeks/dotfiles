@@ -1,33 +1,33 @@
-# Мои конфиги, которые не хочется терять
+# dotfiles
 
-## bare
+## Install
 
-Общее для macos/linux/wsl
+1. Install GNU stow
+2. Clone repository
+3. Run `./restow.sh` or `./restow.sh macos`
 
-### Новый мак:
-- В System Preferences
-  - Добавить русский язык
-  - Поменять раскладку на Russian PC
-  - Выключить автокоррект/etc.. в Spelling
-  - DateTime -> Show date
-  - `defaults write -g ApplePressAndHoldEnabled -bool false`
-  - `defaults -currentHost write -g AppleFontSmoothing -int 0`
-  - Keyboard -> Key Repeat и Delay Until Repeat
-  - Обои
-  - Keyboard -> Shortcuts
-    - Выключить apropos -- `Search man Page Index in Terminal`
-- Установить
-  - brew
-  - stow
-  - Magnet из AppStore
-  - Telegram Desktop
-  - Нужные jdk
-- Конфиги
-  - Добавить .ssh ключ
-  - `git clone git@github.com:darkkeks/dotfiles.git`
-  - `./restow.sh`
-  - `brew bundle install --file ~/.Brewfile`
-- Сделать brew bash дефолтным шеллом (`/etc/shells` + `chsh -s`)
-- export + import настроек IntelliJ
-- export + import настроек iTerm2
-- docker login
+## Components
+- `bare` &mdash; Common config files for macos/linux/wsl
+- `macos` &mdash; Macos specific config files
+
+## New macbook
+
+- System Preferences
+  - Add russian keyboard layout (Russian PC variant)
+  - Spelling &mdash; disable autocorrent
+  - DateTime &mdash; Show date
+  - Disable letter variants on key hold:
+    `defaults write -g ApplePressAndHoldEnabled -bool false`
+  - Disable font smoothing:
+    `defaults -currentHost write -g AppleFontSmoothing -int 0`
+  - Keyboard &mdash; adjust Key Repeat and Delay Until Repeat
+  - Keyboard &mdash; disable apropos shortcut (`Search man Page Index in Terminal`)
+- Install brew, Magnet, Telegram Desktop, JDK
+- Add ssh key
+- Apply stow configuration
+- Install brew packages from Brewfile:
+  `brew bundle install --file ~/Brewfile`
+- Set brew bash as default shell (add to `/etc/shells`, then `chsh -s /usr/local/bin/bash`)
+- Export + Import IntelliJ settings
+- Export + Import iTerm2 settings
+- Login into docker
