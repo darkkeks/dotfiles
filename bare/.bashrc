@@ -29,10 +29,10 @@ alias ll='ls -lah'
 alias vim='nvim'
 
 # add local bin directory to PATH
-PATH="$PATH:~/bin"
+PATH="$PATH:$HOME/bin"
 
 # add python local bin directory to PATH
-[[ -d ~/.local/bin ]] && PATH="$PATH:~/.local/bin"
+[[ -d ~/.local/bin ]] && PATH="$PATH:$HOME/.local/bin"
 
 # git aliases
 [[ -r ~/bin/git_alias.sh ]] && . ~/bin/git_alias.sh

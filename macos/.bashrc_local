@@ -5,10 +5,10 @@ JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-11.yandex
 PATH="$JAVA_PATH/bin:$PATH"
 
 # Add ya arcadia to PATH
-PATH="$PATH:~/bin/arcadia"
+PATH="$PATH:$HOME/bin/arcadia"
 
 # Add yc to PATH
-[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:~/yandex-cloud/bin"
+[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
 
 # Get brew prefix for adding packages to PATH
 # BREW_PREFIX=$(brew --prefix)  (50ms)
