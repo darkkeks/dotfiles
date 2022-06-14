@@ -87,6 +87,8 @@ alt + shift - 2 : yabai -m window --space 2
 alt + shift - 3 : yabai -m window --space 3
 alt + shift - 4 : yabai -m window --space 4
 
+alt + shift - f : /Users/darkkeks/bin/fix-telegram-size
+
 # focus window
 # alt - h : yabai -m window --focus west
 

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for window_id in $(yabai -m query --windows | jq '.[] | select(.app == "Telegram") | .id' -r); do
+    yabai -m window $window_id --resize abs:1139:900
+done
