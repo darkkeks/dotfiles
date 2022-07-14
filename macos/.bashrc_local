@@ -1,7 +1,7 @@
 ## PATH
 
 # Explicitly set default jdk
-JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-11.yandex
+JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.yandex
 PATH="$JAVA_PATH/bin:$PATH"
 
 # Add ya arcadia to PATH
