@@ -32,6 +32,9 @@ function init-nvm {
         . "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
 }
 
+# Add pnpm to PATH
+export PATH="$HOME/Library/pnpm:$PATH"
+
 ## ARC
 
 ARC_DIR=~/repo
@@ -78,4 +81,4 @@ export PERL_LWP_SSL_VERIFY_HOSTNAME=0
 export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
 
 # Alias for unused-code sub-issues
-alias unused-code="create-issue.py -p DIRECT-164934 -s "$1" -c --do"
+function unused-code { create-issue.py -p DIRECT-164934 -s "$1" -c --do; }
