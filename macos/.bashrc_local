@@ -38,13 +38,16 @@ export PATH="$HOME/Library/pnpm:$PATH"
 ## ARC
 
 ARC_DIR=~/repo
-ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff)
+
+# https://coolors.co/ffbe0b-fb5607-ff006e-8338ec-3a86ff-00ffff
+ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
 
 alias r1="cd $ARC_DIR/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
 alias r2="cd $ARC_DIR/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
 alias r3="cd $ARC_DIR/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
 alias r4="cd $ARC_DIR/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
 alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
+alias rb="cd $ARC_DIR/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
 
 function mount-all {
     arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
@@ -52,6 +55,7 @@ function mount-all {
     arc mount -m "$ARC_DIR/a3" -S "$ARC_DIR/s3" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/a4" -S "$ARC_DIR/s4" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/at" -S "$ARC_DIR/st" --object-store "$ARC_DIR/object-store"
+    arc mount -m "$ARC_DIR/ab" -S "$ARC_DIR/sb" --object-store "$ARC_DIR/object-store"
 }
 
 ## SSH
