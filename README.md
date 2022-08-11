@@ -28,6 +28,7 @@
 - Install brew packages from Brewfile:
   `brew bundle install --file ~/Brewfile`
 - Set brew bash as default shell (add to `/etc/shells`, then `chsh -s /usr/local/bin/bash`)
+- Increase system open files limits: `sudo launchctl limit maxfiles 122880 245760`
 - Export + Import IntelliJ settings
 - Export + Import iTerm2 settings
 - Login into docker
