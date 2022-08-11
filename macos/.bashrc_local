@@ -47,7 +47,7 @@ alias r2="cd $ARC_DIR/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
 alias r3="cd $ARC_DIR/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
 alias r4="cd $ARC_DIR/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
 alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
-alias rb="cd $ARC_DIR/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
+alias rb="cd $ARC_DIR/ab/direct/backend; iterm-tab-colors ${ARC_COLORS[5]}"
 
 function mount-all {
     arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
@@ -85,4 +85,4 @@ export PERL_LWP_SSL_VERIFY_HOSTNAME=0
 export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
 
 # Alias for unused-code sub-issues
-function unused-code { create-issue.py -p DIRECT-164934 -s "$1" -c --do; }
+function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s "$summary" --do "$@"; }
