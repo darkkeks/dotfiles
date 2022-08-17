@@ -86,3 +86,6 @@ export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
 
 # Alias for unused-code sub-issues
 function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s "$summary" --do "$@"; }
+
+# Shortcut for local dbs-sql
+function m { printf "%s\0" "$@" | ssh ppcdev2 xargs -0 dbs-sql; }
