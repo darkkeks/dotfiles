@@ -10,8 +10,13 @@ case "$1" in
         ACTION="$ACTION --delete macos"
         ;;
 
+    gpg)
+        ACTION="$ACTION --delete gpg"
+        ;;
+
+
     *)
-        echo "Usage: $0 [macos]"
+        echo "Usage: $0 [macos|gpg]"
         exit
 esac
 

@@ -15,7 +15,7 @@ case "$1" in
         ;;
 
     *)
-        echo "Usage: $0 [macos]"
+        echo "Usage: $0 [macos|gpg]"
         exit
 esac
 
