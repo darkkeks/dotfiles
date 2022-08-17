@@ -25,12 +25,20 @@ def get_issue(client: Startrek, key: str) -> Optional[Resource]:
 
 @click.command()
 @click.option('-p', '--parent', help='Parent issue key')
+@click.option('-r', '--relates', help='Related issue key')
 @click.option('-s', '--summary', help='Issue summary', prompt=True)
 @click.option('-d', '--description', help='Issue desciption', required=False)
 @click.option('-t', '--tag', help='Issue tags', multiple=True)
 @click.option('-c', '--closed', help='Create issue in closed state, with Affected apps: none', is_flag=True)
 @click.option('--do', is_flag=True, help='Actually create an issue')
-def create_issue(parent: Optional[str], summary: str, description: str, tag: list[str], closed: bool, do: bool):
+def create_issue(
+        parent: Optional[str],
+        relates: Optional[str],
+        summary: str,
+        description: Optional[str],
+        tag: list[str],
+        closed: bool,
+        do: bool):
     client = create_client()
 
     parent_issue = None
@@ -40,10 +48,21 @@ def create_issue(parent: Optional[str], summary: str, description: str, tag: lis
             click.secho(f'Issue {parent} could not be found!', fg='red')
             return
 
+    if relates is not None:
+        relates_issue = get_issue(client, relates)
+        if relates_issue is None:
+            click.secho(f'Issue {relates} could not be found!', fg='red')
+            return
+
     if do:
         additional = {}
         if parent:
             additional['parent'] = parent
+        if relates:
+            additional['links'] = [dict(
+                issue=relates,
+                relationship='relates',
+            )]
         if description:
             additional['description'] = description
         issue = client.issues.create(
