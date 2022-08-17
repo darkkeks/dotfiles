@@ -40,5 +40,8 @@ PATH="$PATH:$HOME/bin"
 # add cargo to PATH
 [[ -f ~/.cargo/env ]] && . ~/.cargo/env
 
+# source gpg bashrc
+[[ -f ~/.bashrc_gpg ]] && . ~/.bashrc_gpg
+
 # source host-specific bashrc
 [[ -f ~/.bashrc_local ]] && . ~/.bashrc_local
