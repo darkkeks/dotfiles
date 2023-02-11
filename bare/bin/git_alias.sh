@@ -259,4 +259,5 @@ alias glum='vcs pull upstream master'
 alias gwch='vcs whatchanged -p --abbrev-commit --pretty=medium'
 alias gwip='vcs add -A; vcs rm $(vcs ls-files --deleted) 2> /dev/null; vcs commit --no-verify --no-gpg-sign -m "--wip-- [skip ci]"'
 
-
+alias gs='vcs submit'
+alias gsv='vcs submit --view'
