@@ -70,7 +70,7 @@ function colored-ssh {
 PPCDEV_COLORS=(f94144 f3722c f8961e f9c74f 90be6d 43aa8b 577590)
 
 for i in {1..7}; do
-    alias "ppc$i"="colored-ssh ${PPCDEV_COLORS[$(($i - 1))]} ppcdev$i"
+    alias "ppc$i"="colored-ssh ${PPCDEV_COLORS[$(($i - 1))]} ppcdev$i.yandex.ru"
 done
 
 ## OTHER
@@ -91,12 +91,12 @@ function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s 
 function dbs-sql {
     if [[ " $@ " =~ " -q " ]] || [[ ! -t 0 ]]; then
         # no need for a tty
-        ssh ppcdev2 "dbs-sql $(printf "%q " "$@")";
+        ssh ppcdev2.yandex.ru "dbs-sql $(printf "%q " "$@")";
     else
-        ssh -t ppcdev2 "dbs-sql $(printf "%q " "$@")";
+        ssh -t ppcdev2.yandex.ru "dbs-sql $(printf "%q " "$@")";
     fi
 }
 
 alias m=dbs-sql
 
-function doi { printf "%s\0" "$@" | ssh ppcdev2 'xargs -0 /var/www/ppc.yandex.ru/bin/object-info | format-direct-log --colored'; }
+function doi { printf "%s\0" "$@" | ssh ppcdev2.yandex.ru 'xargs -0 /var/www/ppc.yandex.ru/bin/object-info | format-direct-log --colored'; }
