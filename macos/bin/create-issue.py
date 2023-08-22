@@ -14,6 +14,7 @@ USER_AGENT = 'darkkeks/create-issue.py'
 ISSUE_ALIAS = {
     'retargeting': 'DIRECT-176277',
     'chassis': 'DIRECT-186946',
+    'unused': 'DIRECT-164934',
 }
 
 
