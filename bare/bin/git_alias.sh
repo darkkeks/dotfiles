@@ -261,3 +261,10 @@ alias gwip='vcs add -A; vcs rm $(vcs ls-files --deleted) 2> /dev/null; vcs commi
 
 alias gs='vcs submit'
 alias gsv='vcs submit --view'
+
+alias gpr='vcs pr status'
+alias gprs='vcs pr select'
+alias gpro='vcs pr view'
+
+alias gup='vcs up'
+alias gupc='vcs up --to app/direct-build-cache/mac-debug'
