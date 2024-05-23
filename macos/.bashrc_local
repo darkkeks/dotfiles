@@ -1,11 +1,14 @@
 ## PATH
 
 # Explicitly set default jdk
-JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.yandex
-PATH="$JAVA_PATH/bin:$PATH"
+# JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.yandex
+# PATH="$JAVA_PATH/bin:$PATH"
+
+# Add IntelliJ IDEA to path
+PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
 
 # Add ya arcadia to PATH
-PATH="$PATH:$HOME/bin/arcadia"
+# PATH="$PATH:$HOME/bin/arcadia"
 
 # Add yc to PATH
 [[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
@@ -15,13 +18,16 @@ PATH="$PATH:$HOME/bin/arcadia"
 BREW_PREFIX="/usr/local"
 
 # Override coreutils, grep with gnu version
-PATH="$BREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
-PATH="$BREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
+# PATH="$BREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
+# PATH="$BREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
+
+# Add mysql-client to PATH
+# PATH="$BREW_PREFIX/opt/mysql-client@5.7/bin:$PATH"
 
 # Use llvm clang, instead of apple clang
-PATH="$BREW_PREFIX/opt/llvm/bin:$PATH"
-LDFLAGS="-L$BREW_PREFIX/opt/llvm/lib"
-CPPFLAGS="-I$BREW_PREFIX/opt/llvm/include"
+# PATH="$BREW_PREFIX/opt/llvm/bin:$PATH"
+# LDFLAGS="-L$BREW_PREFIX/opt/llvm/lib"
+# CPPFLAGS="-I$BREW_PREFIX/opt/llvm/include"
 
 # Add nvm to PATH, and load completion
 # (takes > 100ms, so should be used on demand)
@@ -31,9 +37,6 @@ function init-nvm {
     [ -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \
         . "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
 }
-
-# Add pnpm to PATH
-export PATH="$HOME/Library/pnpm:$PATH"
 
 ## ARC
 
