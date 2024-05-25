@@ -1,12 +1,13 @@
 { config, pkgs, inputs, system, ... }:
 let
-  inherit (inputs) kmonad;
+  kmonad = inputs.kmonad.packages.${system}.default;
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
+  homeDirectory = "/Users/darkkeks";
 in
 {
   home.username = "darkkeks";
-  home.homeDirectory = "/Users/darkkeks";
+  home.homeDirectory = homeDirectory;
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -25,9 +26,12 @@ in
 
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
+        ppkgs.click
+
+        (ppkgs.callPackage ./yandex-tracker-client.nix {})
     ]))
 
-    kmonad.packages.${system}.default
+    kmonad
 
     arc
   ];
@@ -65,4 +69,20 @@ in
     enable = true;
     package = jdk.jdk17;
   };
+
+  # Needs root :(
+  # launchd.agents.kmonad = {
+  #   enable = true;
+  #   config = {
+  #     Label = "kmonad";
+  #     ProgramArguments = [
+  #       "${kmonad}/bin/kmonad"
+  #       (toString ./kmonad/caps-lock-arrows.kbd)
+  #     ];
+  #     StandardOutPath = "${homeDirectory}/.kmonad.out";
+  #     StandardErrorPath = "${homeDirectory}/.kmonad.err";
+  #     KeepAlive = true;
+  #     LaunchAtLoad = true;
+  #   };
+  # };
 }
