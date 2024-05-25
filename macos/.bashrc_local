@@ -91,15 +91,23 @@ export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
 function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s "$summary" --do "$@"; }
 
 # Shortcut for local dbs-sql
-function dbs-sql {
+function m {
     if [[ " $@ " =~ " -q " ]] || [[ ! -t 0 ]]; then
         # no need for a tty
-        ssh ppcdev2.yandex.ru "dbs-sql $(printf "%q " "$@")";
+        ssh dev "ya tool direct sql $(printf "%q " "$@")";
     else
-        ssh -t ppcdev2.yandex.ru "dbs-sql $(printf "%q " "$@")";
+        ssh -t dev "ya tool direct sql $(printf "%q " "$@")";
     fi
 }
 
-alias m=dbs-sql
-
 function doi { printf "%s\0" "$@" | ssh ppcdev2.yandex.ru 'xargs -0 /var/www/ppc.yandex.ru/bin/object-info | format-direct-log --colored'; }
+
+# Ya tools
+alias cs="ya-tool cs"
+alias dnsclient="ya-tool dnsclient"
+alias grut="ya-tool grut"
+alias infractl="ya-tool infractl"
+alias kubectl="ya-tool kubectl"
+alias yo="ya-tool yo"
+alias yp="ya-tool yp"
+alias yt="ya-tool yt"
