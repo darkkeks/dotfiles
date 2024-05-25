@@ -1,9 +1,10 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 
+import os.path
 import click
-from startrek_client import Startrek
-from startrek_client.exceptions import NotFound
-from startrek_client.objects import Resource
+from yandex_tracker_client import TrackerClient
+from yandex_tracker_client.exceptions import NotFound
+from yandex_tracker_client.objects import Resource
 from typing import Optional
 
 
@@ -18,14 +19,17 @@ ISSUE_ALIAS = {
 }
 
 
-def create_client() -> Startrek:
+def create_client() -> TrackerClient:
     with open(TOKEN_PATH, 'r') as f:
         token = f.read().strip()
 
-    return Startrek(token=token, useragent=USER_AGENT)
+    return TrackerClient(
+            base_url='https://st-api.yandex-team.ru',
+            token=token,
+            headers={'User-Agent': USER_AGENT})
 
 
-def get_issue(client: Startrek, key: str) -> Optional[Resource]:
+def get_issue(client: TrackerClient, key: str) -> Optional[Resource]:
     try:
         return client.issues[key]
     except NotFound:
@@ -33,21 +37,56 @@ def get_issue(client: Startrek, key: str) -> Optional[Resource]:
 
 
 @click.command()
-@click.option('-p', '--parent', help='Parent issue key')
-@click.option('-r', '--relates', help='Related issue key')
+@click.argument('summary', nargs=-1, required=True)
+@click.option('-d', '--description', help='Issue description', required=False)
+def chore(summary: list[str], description: Optional[str]):
+    summary = [s.strip() for s in summary]
+    summary_text = ' '.join(summary)
+
+    description = summary_text + '\n\n----\n\n' + (description or '')
+
+    create_issue(
+            queue='CHORE',
+            summary=summary_text,
+            description=description,
+            do=True)
+
+
+@click.command()
 @click.option('-s', '--summary', help='Issue summary', prompt=True)
+@click.option('-p', '--parent', help='Parent issue key')
+@click.option('-r', '--relates', help='Related issue key', multiple=True)
 @click.option('-d', '--description', help='Issue description', required=False)
 @click.option('-t', '--tag', help='Issue tags', multiple=True)
 @click.option('-c', '--closed', help='Create issue in closed state, with Affected apps: none', is_flag=True)
 @click.option('--do', is_flag=True, help='Actually create an issue')
+def create(summary: str,
+           parent: Optional[str],
+           relates: list[str],
+           description: Optional[str],
+           tag: list[str],
+           closed: bool,
+           do: bool):
+    create_issue(
+            queue='DIRECT',
+            summary=summary,
+            parent=parent,
+            relates=relates,
+            description=description,
+            tag=tag,
+            closed=closed,
+            do=do)
+
+
 def create_issue(
-        parent: Optional[str],
-        relates: Optional[str],
+        queue: str,
         summary: str,
-        description: Optional[str],
-        tag: list[str],
-        closed: bool,
-        do: bool):
+        parent: Optional[str] = None,
+        relates: list[str] = [],
+        description: Optional[str] = None,
+        tag: list[str] = [],
+        closed: bool = False,
+        do: bool = False):
     client = create_client()
 
     parent_issue = None
@@ -60,28 +99,31 @@ def create_issue(
             click.secho(f'Issue {parent} could not be found!', fg='red')
             return
 
-    if relates is not None:
-        if relates in ISSUE_ALIAS:
-            relates = ISSUE_ALIAS[relates]
+    related_issues = []
+    for related in relates:
+        if related in ISSUE_ALIAS:
+            related = ISSUE_ALIAS[related]
 
-        relates_issue = get_issue(client, relates)
-        if relates_issue is None:
-            click.secho(f'Issue {relates} could not be found!', fg='red')
+        related_issue = get_issue(client, related)
+        if related_issue is None:
+            click.secho(f'Issue {related} could not be found!', fg='red')
             return
 
-    queue = 'DIRECT'
+        related_issues.append(related_issue)
+
     assignee = 'darkkeks'
 
     if do:
         additional = {}
         if parent:
             additional['parent'] = parent
-        if relates:
+        if related_issues:
             additional['links'] = [
                 dict(
-                    issue=relates,
+                    issue=related_issue,
                     relationship='relates',
-                ),
+                )
+                for related_issue in related_issues
             ]
         if description:
             additional['description'] = description
@@ -118,4 +160,7 @@ def create_issue(
 
 
 if __name__ == '__main__':
-    create_issue()
+    if os.path.basename(__file__) == 'chore':
+        chore()
+
+    create()
