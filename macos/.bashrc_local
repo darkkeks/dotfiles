@@ -1,5 +1,8 @@
 ## PATH
 
+# Add nix-darwin to PATH
+PATH="/run/current-system/sw/bin/:$PATH"
+
 # Explicitly set default jdk
 # JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.yandex
 # PATH="$JAVA_PATH/bin:$PATH"
