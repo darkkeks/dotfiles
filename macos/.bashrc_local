@@ -100,7 +100,13 @@ function m {
     fi
 }
 
-function doi { printf "%s\0" "$@" | ssh ppcdev2.yandex.ru 'xargs -0 /var/www/ppc.yandex.ru/bin/object-info | format-direct-log --colored'; }
+function doi {
+    printf "%s\0" "$@" | ssh dev-trusty-sas '
+        [[ -f .arc/token ]] || arc token store
+        [[ -f arcadia/.arcadia.root ]] || arc mount
+        xargs -0 ./arcadia/direct/perl/bin/object-info | format-direct-log --colored
+    '
+}
 
 # Ya tools
 alias cs="ya-tool cs"
