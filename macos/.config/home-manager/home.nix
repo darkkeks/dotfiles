@@ -23,6 +23,7 @@ in
     pkgs.gnugrep
     pkgs.htop
     pkgs.percona-server
+    pkgs.postgresql
 
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
