@@ -12,6 +12,11 @@
 
 ## New macbook
 
+1. Change hostname to `darkkeks-osx`.
+1. Copy ssh-keys.
+1. Install nix.
+
+
 - System Preferences
   - Add russian keyboard layout (Russian PC variant)
   - Spelling &mdash; disable autocorrent
@@ -23,7 +28,6 @@
   - Keyboard &mdash; adjust Key Repeat and Delay Until Repeat
   - Keyboard &mdash; disable apropos shortcut (`Search man Page Index in Terminal`)
 - Install brew, Magnet, Telegram Desktop, JDK
-- Add ssh key
 - Apply stow configuration
 - Install brew packages from Brewfile:
   `brew bundle install --file ~/Brewfile`
