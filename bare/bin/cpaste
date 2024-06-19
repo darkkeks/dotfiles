@@ -8,5 +8,5 @@ if [[ ! -z "$filename" ]]; then
     exec "$0" < "$filename"
 fi
 
-curl -s -F 'source=<-' -F name=Untitled -F lang=auto https://paste.darkkeks.me/ajax/createPost/ \
+curl -s -F 'source=<-' -F name=Untitled -F language=auto https://paste.darkkeks.me/ajax/createPost/ \
     | jq '"https://paste.darkkeks.me/" + .id' -r
