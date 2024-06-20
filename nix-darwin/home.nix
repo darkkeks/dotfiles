@@ -1,8 +1,8 @@
-{ config, pkgs, inputs, system, ... }:
+{ config, pkgs, kmonad, ... }:
 let
-  kmonad = inputs.kmonad.packages.${system}.default;
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
+  skotty = pkgs.callPackage ./skotty.nix {};
   homeDirectory = "/Users/darkkeks";
 in
 {
@@ -22,8 +22,18 @@ in
     pkgs.coreutils
     pkgs.gnugrep
     pkgs.htop
+    pkgs.neovim
+    pkgs.stow
     pkgs.percona-server
     pkgs.postgresql
+
+    pkgs.iterm2
+    pkgs.telegram-desktop
+
+    pkgs.docker
+    pkgs.colima
+
+    pkgs.nerdfonts
 
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
@@ -35,6 +45,7 @@ in
     kmonad
 
     arc
+    skotty
   ];
 
   home.file = {
@@ -64,26 +75,13 @@ in
     # EDITOR = "emacs";
   };
 
+  # Make font packages discoverable by MacOS.
+  fonts.fontconfig.enable = true;
+
   programs.home-manager.enable = true;
 
   programs.java = {
     enable = true;
     package = jdk.jdk17;
   };
-
-  # Needs root :(
-  # launchd.agents.kmonad = {
-  #   enable = true;
-  #   config = {
-  #     Label = "kmonad";
-  #     ProgramArguments = [
-  #       "${kmonad}/bin/kmonad"
-  #       (toString ./kmonad/caps-lock-arrows.kbd)
-  #     ];
-  #     StandardOutPath = "${homeDirectory}/.kmonad.out";
-  #     StandardErrorPath = "${homeDirectory}/.kmonad.err";
-  #     KeepAlive = true;
-  #     LaunchAtLoad = true;
-  #   };
-  # };
 }

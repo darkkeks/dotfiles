@@ -3,42 +3,28 @@
 # Add nix-darwin to PATH
 PATH="/run/current-system/sw/bin/:$PATH"
 
-# Explicitly set default jdk
-# JAVA_PATH=/Library/Java/JavaVirtualMachines/jdk-17.yandex
-# PATH="$JAVA_PATH/bin:$PATH"
-
 # Add IntelliJ IDEA to path
 PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
-
-# Add ya arcadia to PATH
-# PATH="$PATH:$HOME/bin/arcadia"
 
 # Add yc to PATH
 [[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
 
-# Get brew prefix for adding packages to PATH
-# BREW_PREFIX=$(brew --prefix)  (50ms)
-BREW_PREFIX="/usr/local"
-
-# Override coreutils, grep with gnu version
-# PATH="$BREW_PREFIX/opt/coreutils/libexec/gnubin:$PATH"
-# PATH="$BREW_PREFIX/opt/grep/libexec/gnubin:$PATH"
-
-# Add mysql-client to PATH
-# PATH="$BREW_PREFIX/opt/mysql-client@5.7/bin:$PATH"
-
-# Use llvm clang, instead of apple clang
-# PATH="$BREW_PREFIX/opt/llvm/bin:$PATH"
-# LDFLAGS="-L$BREW_PREFIX/opt/llvm/lib"
-# CPPFLAGS="-I$BREW_PREFIX/opt/llvm/include"
+# Source brew variables
+# eval "$(/opt/homebrew/bin/brew shellenv)" (5-10ms)
+export HOMEBREW_PREFIX="/opt/homebrew";
+export HOMEBREW_CELLAR="/opt/homebrew/Cellar";
+export HOMEBREW_REPOSITORY="/opt/homebrew";
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
+export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
+export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 
 # Add nvm to PATH, and load completion
 # (takes > 100ms, so should be used on demand)
 function init-nvm {
-    [ -s "$BREW_PREFIX/opt/nvm/nvm.sh" ] && \
-        . "$BREW_PREFIX/opt/nvm/nvm.sh"
-    [ -s "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \
-        . "$BREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+    [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \
+        . "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+    [ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \
+        . "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
 }
 
 ## ARC
@@ -72,12 +58,6 @@ function colored-ssh {
     ssh $@
     [[ -z $color ]] || iterm-tab-colors
 }
-
-PPCDEV_COLORS=(f94144 f3722c f8961e f9c74f 90be6d 43aa8b 577590)
-
-for i in {1..7}; do
-    alias "ppc$i"="colored-ssh ${PPCDEV_COLORS[$(($i - 1))]} ppcdev$i.yandex.ru"
-done
 
 ## OTHER
 

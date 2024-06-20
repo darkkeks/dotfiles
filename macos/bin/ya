@@ -1,0 +1,76 @@
+#!/bin/bash
+
+function die () {
+    echo "$1" > /dev/stderr
+    exit "$2"
+}
+
+if [[ -w $HOME ]]; then
+    YA_PATH=$HOME
+elif [[ -w $TMPDIR ]]; then
+    YA_PATH=$TMPDIR
+elif [ -w "/var/tmp" ]; then
+    YA_PATH="/var/tmp"
+elif [ -w "/tmp" ]; then
+    YA_PATH="/tmp"
+elif [ -w "/dev/shm" ]; then
+    YA_PATH="/dev/shm"
+fi
+
+YA_NAME=".ya-$(( $(date +%s) / 86400 ))"
+MY_YA="$YA_PATH/$YA_NAME"
+MY_YA_BAK="$YA_PATH/$YA_NAME.bak"
+YA_URL='https://s3.mds.yandex.net/ya-bucket/ya'
+
+function del_old_ya () {
+    rm -f "${YA_PATH}"/.ya-*[0-9]
+}
+
+function select_prev_ya() {
+    add_stage_start_to_environ "fakeya-select-previous-ya"
+    rm -f "$MY_YA" "$MY_YA_BAK"
+    YA_NAME=`ls -ta $YA_PATH | grep -E ".ya-[0-9]+" | head -n 1`
+    MY_YA="$YA_PATH/$YA_NAME"
+    [[ "$YA_NAME" != "" && -x "$MY_YA" ]] || die "No previous ya available, try again later" 1
+    echo "Using previous Ya" > /dev/stderr
+}
+
+function add_stage_start_to_environ () {
+    YA_EVENT_STAMP="$1@$(date +%s.%N)"
+    export YA_STAGES=${YA_STAGES}${YA_STAGES:+:}${YA_EVENT_STAMP}
+    unset YA_EVENT_STAMP
+}
+
+function getya () {
+    [[ ! -x "$MY_YA" ]] || return
+    add_stage_start_to_environ "fakeya-mds-fetch"
+
+    if ! curl -q -s --fail "$YA_URL" > "$MY_YA_BAK"; then
+        echo "Can't download ya from $YA_URL" > /dev/stderr
+        select_prev_ya
+        return
+    fi
+    chmod 755 "$MY_YA_BAK"
+
+    if "$MY_YA_BAK" 2>&1 | grep -q "Swiss Army"; then
+        # Ya is present and works correctly, we can purge old ya's
+        add_stage_start_to_environ "fakeya-prepare"
+        TMPDIR="$YA_PATH/$((1 + $RANDOM))"
+        mkdir "$TMPDIR"
+        mv "$MY_YA_BAK" "$TMPDIR/$YA_NAME"
+        del_old_ya
+        mv "$TMPDIR/$YA_NAME" "$MY_YA"
+        rmdir "$TMPDIR"
+    else
+        echo "Latest ya came inconsistent" > /dev/stderr
+        select_prev_ya
+    fi
+}
+
+add_stage_start_to_environ "fakeya-initialization"
+
+getya 100 100>${XDG_RUNTIME_DIR:-/tmp}/ya-sh-$(id -u).lock
+
+add_stage_start_to_environ "fakeya-start-ya-script"
+
+exec "$MY_YA" "$@"
