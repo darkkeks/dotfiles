@@ -18,9 +18,6 @@ let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 
-" Code completion
-Plug 'Valloric/YouCompleteMe'
-
 call plug#end()
 
 " Remove conceal background (messed up in some schemes)
