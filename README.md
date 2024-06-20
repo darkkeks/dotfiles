@@ -11,28 +11,30 @@
 - `macos` &mdash; Macos specific config files
 
 ## New macbook
-
 1. Change hostname to `darkkeks-osx`.
 1. Copy ssh-keys.
+1. Install brew.
 1. Install nix.
-
-
-- System Preferences
+1. Run darwin-rebuild switch.
+1. Apply stow configuration
+1. Set iTerm2 preferences directory to `macos/.config/iterm2`.
+1. System Preferences:
   - Add russian keyboard layout (Russian PC variant)
-  - Spelling &mdash; disable autocorrent
-  - DateTime &mdash; Show date
-  - Disable letter variants on key hold:
-    `defaults write -g ApplePressAndHoldEnabled -bool false`
-  - Disable font smoothing:
-    `defaults -currentHost write -g AppleFontSmoothing -int 0`
-  - Keyboard &mdash; adjust Key Repeat and Delay Until Repeat
-  - Keyboard &mdash; disable apropos shortcut (`Search man Page Index in Terminal`)
-- Install brew, Magnet, Telegram Desktop, JDK
-- Apply stow configuration
+  - Change shortcuts:
+    - Switching spaces
+    - Changing input source
+    - Spotlight
+1. Install kmonad dext.
+1. Set bash as default shell (`chsh -s /run/current-system/sw/bin/bash`)
+1. Log in IntelliJ IDEA.
+
 - Install brew packages from Brewfile:
   `brew bundle install --file ~/Brewfile`
-- Set brew bash as default shell (add to `/etc/shells`, then `chsh -s /usr/local/bin/bash`)
-- Increase system open files limits: `sudo launchctl limit maxfiles 122880 245760`
-- Export + Import IntelliJ settings
-- Export + Import iTerm2 settings
 - Login into docker
+
+Not required anymore?
+  - Spelling &mdash; disable autocorrent
+  - Disable font smoothing:
+    `defaults -currentHost write -g AppleFontSmoothing -int 0`
+  - Keyboard &mdash; disable apropos shortcut (`Search man Page Index in Terminal`)
+  - Increase system open files limits: `sudo launchctl limit maxfiles 122880 245760`

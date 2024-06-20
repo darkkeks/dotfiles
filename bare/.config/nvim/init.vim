@@ -18,18 +18,10 @@ let g:UltiSnipsExpandTrigger = '<tab>'
 let g:UltiSnipsJumpForwardTrigger = '<tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<s-tab>'
 
-" Color theme
-Plug 'w0ng/vim-hybrid'
-let g:hybrid_custom_term_colors=1
-set background=dark
-
 " Code completion
 Plug 'Valloric/YouCompleteMe'
 
 call plug#end()
-
-" Enable color theme
-colorscheme hybrid
 
 " Remove conceal background (messed up in some schemes)
 highlight Conceal ctermbg=NONE
@@ -54,15 +46,3 @@ augroup ft_tex
     au FileType tex setlocal spell
     au FileType tex set spelllang=ru,en_us
 augroup END
-
-" Disable Arrow keys in Normal mode
-map <up> <nop>
-map <down> <nop>
-map <left> <nop>
-map <right> <nop>
-
-" Disable Arrow keys in Insert mode
-imap <up> <nop>
-imap <down> <nop>
-imap <left> <nop>
-imap <right> <nop>
