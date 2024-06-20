@@ -11,12 +11,12 @@
 - `macos` &mdash; Macos specific config files
 
 ## New macbook
-1. Change hostname to `darkkeks-osx`.
+1. Change hostname to `darkkeks-mac`.
 1. Copy ssh-keys.
 1. Install brew.
 1. Install nix.
 1. Run darwin-rebuild switch.
-1. Apply stow configuration
+1. Apply stow configuration.
 1. Set iTerm2 preferences directory to `macos/.config/iterm2`.
 1. System Preferences:
   - Add russian keyboard layout (Russian PC variant)
@@ -25,12 +25,12 @@
     - Changing input source
     - Spotlight
 1. Install kmonad dext.
-1. Set bash as default shell (`chsh -s /run/current-system/sw/bin/bash`)
+1. Set bash as default shell (`chsh -s /run/current-system/sw/bin/bash`).
 1. Log in IntelliJ IDEA.
+1. Log in docker
 
 - Install brew packages from Brewfile:
   `brew bundle install --file ~/Brewfile`
-- Login into docker
 
 Not required anymore?
   - Spelling &mdash; disable autocorrent
