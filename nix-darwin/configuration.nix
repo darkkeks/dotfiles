@@ -1,27 +1,25 @@
-{ self, kmonad, ... }:
-{ lib, pkgs, ... }:
+{ self, inputs, lib, pkgs, ... }:
 {
-  # List packages installed in system profile. To search by name, run:
-  # $ nix-env -qaP | grep wget
-  environment.systemPackages = [
-    pkgs.vim
-
-    pkgs._1password-gui
-    pkgs.spotify
+  # List packages installed in system profile.
+  environment.systemPackages = with pkgs; [
+    _1password-gui
+    spotify
+    vscode
+    kmonad
   ];
 
+  # Add shell to allowed shells (required by chsh).
   environment.shells = [
     pkgs.bashInteractive
   ];
 
   # Auto upgrade nix package and the daemon service.
   services.nix-daemon.enable = true;
-  # nix.package = pkgs.nix;
 
   # Necessary for using flakes on this system.
   nix.settings.experimental-features = "nix-command flakes";
 
-  # Create /etc/bash.bashrc that loads the nix-darwin environment.
+  # Create /etc/bash.bashrc that loads nix environment.
   programs.bash.enable = true;
 
   # Set Git commit hash for darwin-version.
@@ -30,7 +28,8 @@
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
   system.stateVersion = 4;
-
+    
+  # Some System Settings that can be configured automatically.
   system.defaults = {
     NSGlobalDomain.ApplePressAndHoldEnabled = false;
 
@@ -40,20 +39,28 @@
 
   # The platform the configuration will be used on.
   nixpkgs.hostPlatform = "aarch64-darwin";
+
+  nixpkgs.overlays = [
+    # Add kmonad package to pkgs.
+    inputs.kmonad.overlays.default
+  ];
+
   nixpkgs.config = {
-    allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg) [
-        "1password"
-        "spotify"
-      ];
+    # Whitelist packages with unfree licences.
+    allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
+      "1password"
+      "spotify"
+      "vscode"
+    ];
   };
 
   users.users = {
     darkkeks = {
       home = "/Users/darkkeks";
 
+      # Set user shell to the one managed by nix.
       # Manually running chsh -s is still required :(
-      shell = "/run/current-system/sw/bin/bash";
+      shell = pkgs.bashInteractive;
     };
   };
 
@@ -64,12 +71,20 @@
       # Do not autoupdate when running brew commands manually.
       autoUpdate = false;
     };
+    taps = [
+      "darkkeks/xkbswitch"
+    ];
     brews = [
+      "darkkeks/xkbswitch/xkbswitch"
+      "darkkeks/xkbswitch/libxkbswitch"
     ];
     casks = [
+      "chromium"
+      "discord"
       "firefox"
       "intellij-idea-ce"
       "macfuse"
+      "notion"
       "obs"
     ];
     masApps = {
@@ -82,7 +97,7 @@
     serviceConfig = {
       Label = "kmonad";
       ProgramArguments = [
-        "${kmonad}/bin/kmonad"
+        "${pkgs.kmonad}/bin/kmonad"
         (toString ./kmonad/caps-lock-arrows.kbd)
       ];
       StandardOutPath = "/var/log/kmonad.out.log";

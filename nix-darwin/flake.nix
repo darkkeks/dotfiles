@@ -20,27 +20,24 @@
     };
   };
 
-  outputs = inputs@{ self, nix-darwin, nixpkgs, home-manager, kmonad }:
+  outputs = inputs@{ self, nix-darwin, nixpkgs, home-manager, ... }:
   let
-    kmonadPackage = kmonad.packages."aarch64-darwin".default;
-    configuration = import ./configuration.nix {
-      inherit self;
-      kmonad = kmonadPackage;
-    };
+    kmonad = inputs.kmonad.packages."aarch64-darwin".default;
   in
   {
     # Build darwin flake using:
     # $ darwin-rebuild build --flake .#darkkeks-mac
     darwinConfigurations."darkkeks-mac" = nix-darwin.lib.darwinSystem {
+      specialArgs = {
+        inherit self inputs;
+      };
       modules = [
-        configuration
+        ./configuration.nix
+
         home-manager.darwinModules.home-manager {
           home-manager.useGlobalPkgs = true;
           # home-manager.useUserPackages = true;
           home-manager.users.darkkeks = import ./home.nix;
-          home-manager.extraSpecialArgs = {
-            kmonad = kmonadPackage;
-          };
         }
       ];
     };
