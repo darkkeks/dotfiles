@@ -1,14 +1,5 @@
 ## PATH
 
-# Add nix-darwin to PATH
-PATH="/run/current-system/sw/bin/:$PATH"
-
-# Add IntelliJ IDEA to path
-PATH="/Applications/IntelliJ IDEA CE.app/Contents/MacOS:$PATH"
-
-# Add yc to PATH
-[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
-
 # Source brew variables
 # eval "$(/opt/homebrew/bin/brew shellenv)" (5-10ms)
 export HOMEBREW_PREFIX="/opt/homebrew";
@@ -17,6 +8,9 @@ export HOMEBREW_REPOSITORY="/opt/homebrew";
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
 export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
 export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
+
+# Add yc to PATH
+[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
 
 # Add nvm to PATH, and load completion
 # (takes > 100ms, so should be used on demand)
@@ -84,7 +78,7 @@ function m {
 }
 
 function doi {
-    printf "%s\0" "$@" | ssh dev-trusty-sas '
+    printf "%s\0" "$@" | ssh tdev '
         [[ -f .arc/token ]] || arc token store
         [[ -f arcadia/.arcadia.root ]] || arc mount
         xargs -0 ./arcadia/direct/perl/bin/object-info | format-direct-log --colored
