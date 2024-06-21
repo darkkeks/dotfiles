@@ -1,4 +1,4 @@
-{ config, pkgs, kmonad, ... }:
+{ config, pkgs, ... }:
 let
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
@@ -18,32 +18,45 @@ in
   # release notes.
   home.stateVersion = "23.11";
 
-  home.packages = [
-    pkgs.coreutils
-    pkgs.gnugrep
-    pkgs.htop
-    pkgs.neovim
-    pkgs.stow
-    pkgs.percona-server
-    pkgs.postgresql
+  home.packages = with pkgs; [
+    coreutils
+    gnugrep
+    gnused
+    gnutar
+    netcat-gnu
+    htop
+    neovim
+    stow
+    percona-server
+    postgresql
+    tree
+    watch
+    wget
+    rsync
+    ripgrep
+    bat
+    git
+    graphviz
+    jq
+    maven
+    mdcat
+    pv
 
-    pkgs.iterm2
-    pkgs.telegram-desktop
+    iterm2
+    telegram-desktop
 
-    pkgs.docker
-    pkgs.colima
+    docker
+    colima
 
-    pkgs.nerdfonts
-
+    nerdfonts
+  ] ++ [
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
         ppkgs.click
 
         (ppkgs.callPackage ./yandex-tracker-client.nix {})
     ]))
-
-    kmonad
-
+  ] ++ [
     arc
     skotty
   ];
