@@ -28,13 +28,3 @@
 1. Set bash as default shell (`chsh -s /run/current-system/sw/bin/bash`).
 1. Log in IntelliJ IDEA.
 1. Log in docker
-
-- Install brew packages from Brewfile:
-  `brew bundle install --file ~/Brewfile`
-
-Not required anymore?
-  - Spelling &mdash; disable autocorrent
-  - Disable font smoothing:
-    `defaults -currentHost write -g AppleFontSmoothing -int 0`
-  - Keyboard &mdash; disable apropos shortcut (`Search man Page Index in Terminal`)
-  - Increase system open files limits: `sudo launchctl limit maxfiles 122880 245760`
