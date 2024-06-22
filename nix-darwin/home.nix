@@ -22,6 +22,7 @@ in
     gnugrep
     gnused
     gnutar
+    openssl
     netcat-gnu
     htop
     neovim
