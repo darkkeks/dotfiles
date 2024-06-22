@@ -10,12 +10,8 @@ case "$1" in
         ACTION="$ACTION --restow macos"
         ;;
 
-    gpg)
-        ACTION="$ACTION --restow gpg"
-        ;;
-
     *)
-        echo "Usage: $0 [macos|gpg]"
+        echo "Usage: $0 [macos]"
         exit
 esac
 
