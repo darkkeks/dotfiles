@@ -1,10 +1,11 @@
-{ self, inputs, lib, pkgs, ... }:
+{ pkgs, lib, inputs, username, ... }:
 {
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
     _1password-gui
     spotify
     vscode
+    agenix
     kmonad
   ];
 
@@ -23,7 +24,7 @@
   programs.bash.enable = true;
 
   # Set Git commit hash for darwin-version.
-  system.configurationRevision = self.rev or self.dirtyRev or null;
+  system.configurationRevision = inputs.self.rev or inputs.self.dirtyRev or null;
 
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
@@ -41,9 +42,19 @@
   nixpkgs.hostPlatform = "aarch64-darwin";
 
   nixpkgs.overlays = [
+    # Add agenix package to pkgs.
+    inputs.agenix.overlays.default
     # Add kmonad package to pkgs.
     inputs.kmonad.overlays.default
   ];
+
+  age = {
+    identityPaths = [ "/Users/darkkeks/.ssh/id_ed25519" ];
+    secrets = {
+      maven-settings-security.file = ./secrets/maven-settings-security.age;
+      maven-settings-security.owner = username;
+    };
+  };
 
   nixpkgs.config = {
     # Whitelist packages with unfree licences.
@@ -55,8 +66,8 @@
   };
 
   users.users = {
-    darkkeks = {
-      home = "/Users/darkkeks";
+    "${username}" = {
+      home = "/Users/${username}";
 
       # Set user shell to the one managed by nix.
       # Manually running chsh -s is still required :(

@@ -1,13 +1,12 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, username, ... }:
 let
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
   skotty = pkgs.callPackage ./skotty.nix {};
-  homeDirectory = "/Users/darkkeks";
 in
 {
-  home.username = "darkkeks";
-  home.homeDirectory = homeDirectory;
+  home.username = username;
+  home.homeDirectory = "/Users/${username}";
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -61,35 +60,7 @@ in
     skotty
   ];
 
-  home.file = {
-    jdk11 = {
-      target = "Library/Java/JavaVirtualMachines/yandex-jdk-11";
-      source = jdk.jdk11.home;
-    };
-    jdk17 = {
-      target = "Library/Java/JavaVirtualMachines/yandex-jdk-17";
-      source = jdk.jdk17.home;
-    };
-  };
-
-  # Home Manager can also manage your environment variables through
-  # 'home.sessionVariables'. These will be explicitly sourced when using a
-  # shell provided by Home Manager. If you don't want to manage your shell
-  # through Home Manager then you have to manually source 'hm-session-vars.sh'
-  # located at either
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  ~/.local/state/nix/profiles/profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  /etc/profiles/per-user/darkkeks/etc/profile.d/hm-session-vars.sh
-  #
   home.sessionVariables = {
-    # EDITOR = "emacs";
   };
 
   # Make font packages discoverable by MacOS.
@@ -97,8 +68,23 @@ in
 
   programs.home-manager.enable = true;
 
+  # Configure JVMs.
   programs.java = {
     enable = true;
     package = jdk.jdk17;
+  };
+  home.file.jdk11 = {
+    target = "Library/Java/JavaVirtualMachines/yandex-jdk-11";
+    source = jdk.jdk11.home;
+  };
+  home.file.jdk17 = {
+    target = "Library/Java/JavaVirtualMachines/yandex-jdk-17";
+    source = jdk.jdk17.home;
+  };
+
+  # Configure maven.
+  home.file.".m2/settings.xml".source = ./m2/settings.xml;
+  home.file.".m2/settings-security.xml" = {
+    source = config.lib.file.mkOutOfStoreSymlink /run/agenix/maven-settings-security;
   };
 }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    <servers>
+        <server>
+            <id>direct</id>
+            <username>darkkeks</username>
+            <password>{A6AdFyYkjFMH90RojGubLJrmlbG6KJy7IegAJoz7kpitGZzq4V66/eXw3SBXaUTMpjSsi57HkSe7Ta9NIT0YsfNaVLf13b854lh6vwkLhQ0=}</password>
+        </server>
+    </servers>
+
+    <mirrors>
+        <mirror>
+            <id>direct</id>
+            <name>central to bucket mirror</name>
+            <url>https://bucket.yandex-team.ru/v1/maven/direct</url>
+            <mirrorOf>central</mirrorOf>
+        </mirror>
+    </mirrors>
+
+    <profiles>
+        <profile>
+            <id>bucket</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <repositories>
+                <repository>
+                    <id>direct</id>
+                    <name>Direct Bucket Repository</name>
+                    <url>https://bucket.yandex-team.ru/v1/maven/direct</url>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>daily</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                    </snapshots>
+                </repository>
+            </repositories>
+
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>direct</id>
+                    <name>Direct Bucket Repository</name>
+                    <url>https://bucket.yandex-team.ru/v1/maven/direct</url>
+                    <releases>
+                        <enabled>true</enabled>
+                        <updatePolicy>daily</updatePolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                        <updatePolicy>always</updatePolicy>
+                    </snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+
+            <properties>
+                <releases-repo>https://bucket.yandex-team.ru/v1/maven/yandex_qa_releases</releases-repo>
+                <snapshots-repo>https://bucket.yandex-team.ru/v1/maven/yandex_qa_snapshots</snapshots-repo>
+            </properties>
+        </profile>
+    </profiles>
+</settings>
