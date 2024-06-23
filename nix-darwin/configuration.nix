@@ -97,6 +97,7 @@
       "macfuse"
       "notion"
       "obs"
+      "wireshark"
     ];
     masApps = {
       Magnet = 441258766;
