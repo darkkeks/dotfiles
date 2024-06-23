@@ -90,7 +90,7 @@
       "darkkeks/xkbswitch/libxkbswitch"
     ];
     casks = [
-      "chromium"
+      "google-chrome"
       "discord"
       "firefox"
       "intellij-idea-ce"
