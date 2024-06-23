@@ -18,6 +18,9 @@ let
     passthru = {
       home = "${jdk11}/lib/openjdk";
     };
+    meta = {
+      platforms = [ "aarch64-darwin" ];
+    };
   };
   jdk17 = stdenv.mkDerivation {
     pname = "yandex-jdk";
@@ -36,6 +39,9 @@ let
     '';
     passthru = {
       home = "${jdk17}/lib/openjdk";
+    };
+    meta = {
+      platforms = [ "aarch64-darwin" ];
     };
   };
 in {

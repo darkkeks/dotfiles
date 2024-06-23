@@ -38,9 +38,11 @@ in
     git
     graphviz
     jq
-    maven
     mdcat
     pv
+
+    # Use maven with jdk11.
+    (pkgs.maven.override { jdk = jdk.jdk11; })
 
     iterm2
     telegram-desktop
