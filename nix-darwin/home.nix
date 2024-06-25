@@ -55,6 +55,7 @@ in
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
         ppkgs.click
+        ppkgs.yq
 
         (ppkgs.callPackage ./yandex-tracker-client.nix {})
     ]))
