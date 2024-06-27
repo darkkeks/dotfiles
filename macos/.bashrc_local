@@ -87,6 +87,7 @@ function doi {
 
 # Ya tools
 alias cs="ya-tool cs"
+alias direct="ya-tool direct"
 alias dnsclient="ya-tool dnsclient"
 alias grut="ya-tool grut"
 alias infractl="ya-tool infractl"

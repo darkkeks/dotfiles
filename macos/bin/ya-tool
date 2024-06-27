@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+PATH_CACHE="$HOME/.ya/tool-paths.json"
+if [[ ! -f "$PATH_CACHE" ]]; then
+    mkdir -p $(dirname "$PATH_CACHE")
+    echo '{}' > "$PATH_CACHE"
+fi
+
+function cache-write {
+    key="$1"; value="$2"
+    f=$(mktemp)
+    jq ". + {\"$key\":\"$value\"}" "$PATH_CACHE" >"$f"
+    mv "$f" "$PATH_CACHE"
+}
+
+tool="$1"; shift
+
+if [[ -z "$tool" ]]; then
+    echo "Usage: $0 [tool-name]"
+elif [[ "$tool" = "--force-update" ]]; then
+    cache-write "$tool" ""
+    exec ya tool --force-update "$@"
+fi
+
+path=$(jq -r ".[\"$tool\"]" $PATH_CACHE)
+if [[ "$path" = "null" ]]; then
+    if path=$(ya tool --print-path $tool 2>/dev/null); then
+        cache-write "$tool" "$path"
+    else
+        path=""
+    fi
+fi
+
+[[ -n "$path" && -f "$path" ]] && exec "$path" "$@"
+
+exec ya tool "$tool" "$@"
