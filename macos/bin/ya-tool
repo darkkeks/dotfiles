@@ -33,6 +33,7 @@ if [[ "$path" = "null" ]]; then
     fi
 fi
 
-[[ -n "$path" && -f "$path" ]] && exec "$path" "$@"
+[[ -n "$path" && -f "$path" ]] \
+    && TOOLDIR=$(dirname $path) exec "$path" "$@"
 
 exec ya tool "$tool" "$@"
