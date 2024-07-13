@@ -86,14 +86,15 @@
       "darkkeks/xkbswitch"
     ];
     brews = [
-      "darkkeks/xkbswitch/xkbswitch"
       "darkkeks/xkbswitch/libxkbswitch"
+      "darkkeks/xkbswitch/xkbswitch"
     ];
     casks = [
-      "google-chrome"
       "discord"
       "firefox"
+      "google-chrome"
       "intellij-idea-ce"
+      "logitech-g-hub"
       "macfuse"
       "notion"
       "obs"
@@ -105,6 +106,7 @@
   };
 
   # Run kmonad in background.
+  # TODO(darkkeks): Does not start on reboot.
   launchd.agents.kmonad = {
     serviceConfig = {
       Label = "kmonad";
