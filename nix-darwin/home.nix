@@ -81,6 +81,10 @@ in
     target = "Library/Java/JavaVirtualMachines/yandex-jdk-11";
     source = jdk.jdk11.home;
   };
+  home.file.jdk15 = {
+    target = "Library/Java/JavaVirtualMachines/yandex-jdk-15";
+    source = jdk.jdk15.home;
+  };
   home.file.jdk17 = {
     target = "Library/Java/JavaVirtualMachines/yandex-jdk-17";
     source = jdk.jdk17.home;
