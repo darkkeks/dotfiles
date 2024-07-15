@@ -94,6 +94,7 @@
       "firefox"
       "google-chrome"
       "intellij-idea-ce"
+      "keycastr"
       "logitech-g-hub"
       "macfuse"
       "notion"
