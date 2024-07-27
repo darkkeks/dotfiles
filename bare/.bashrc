@@ -2,15 +2,15 @@
 # dont do anything if that is the case
 [[ $- != *i* ]] && return
 
-# don't put duplicate lines or lines starting with space in the history.
+# don't put duplicate lines or lines starting with space in the history
 HISTCONTROL=ignoreboth
-
 # append to the history file, don't overwrite it
 shopt -s histappend
-
-# increase default bash history size
-HISTSIZE=100000
-HISTFILESIZE=200000
+# never truncate history
+HISTSIZE=-1
+HISTFILESIZE=-1
+# add commands to history file immediately, otherwise shell history can be lost sometimes
+PROMPT_COMMAND='history -a'
 
 # use vim as default editor
 EDITOR=vim
