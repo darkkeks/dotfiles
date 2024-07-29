@@ -1,5 +1,27 @@
 { stdenv, fetchurl, fetchzip, ... }:
 let
+  jdk8 = stdenv.mkDerivation {
+    pname = "yandex-jdk";
+    version = "8u202";
+    src = fetchzip {
+      url = "https://proxy.sandbox.yandex-team.ru/1901326056";
+      hash = "sha256-AR0vHpU4gmyJAKmZuw3/REeyhTOPo82VxxHYfk3PHmY=";
+      extension = "tar";
+      stripRoot = false;
+    };
+    buildPhase = ''
+      mkdir -p $out/lib/
+      cp -r $src $out/lib/openjdk
+
+      ln -s $out/lib/openjdk/bin $out/bin
+    '';
+    passthru = {
+      home = "${jdk8}/lib/openjdk";
+    };
+    meta = {
+      platforms = [ "aarch64-darwin" ];
+    };
+  };
   jdk11 = stdenv.mkDerivation {
     pname = "yandex-jdk";
     version = "11.0.22+7";
@@ -74,5 +96,5 @@ let
     };
   };
 in {
-  inherit jdk11 jdk15 jdk17;
+  inherit jdk8 jdk11 jdk15 jdk17;
 }

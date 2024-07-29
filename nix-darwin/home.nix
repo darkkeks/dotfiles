@@ -42,7 +42,7 @@ in
     pv
 
     # Use maven with jdk11.
-    (pkgs.maven.override { jdk = jdk.jdk11; })
+    (pkgs.maven.override { jdk = jdk.jdk8; })
 
     iterm2
     telegram-desktop
@@ -76,6 +76,10 @@ in
   programs.java = {
     enable = true;
     package = jdk.jdk17;
+  };
+  home.file.jdk8 = {
+    target = "Library/Java/JavaVirtualMachines/yandex-jdk-8";
+    source = jdk.jdk8.home;
   };
   home.file.jdk11 = {
     target = "Library/Java/JavaVirtualMachines/yandex-jdk-11";
