@@ -3,6 +3,7 @@ let
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
   skotty = pkgs.callPackage ./skotty.nix {};
+  yourkit = pkgs.callPackage ./yourkit.nix {};
 in
 {
   home.username = username;
@@ -41,7 +42,7 @@ in
     mdcat
     pv
 
-    # Use maven with jdk11.
+    # Use maven with jdk8.
     (pkgs.maven.override { jdk = jdk.jdk8; })
 
     iterm2
@@ -62,6 +63,7 @@ in
   ] ++ [
     arc
     skotty
+    yourkit
   ];
 
   home.sessionVariables = {
