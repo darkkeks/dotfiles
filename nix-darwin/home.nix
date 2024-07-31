@@ -43,7 +43,7 @@ in
     pv
 
     # Use maven with jdk8.
-    (pkgs.maven.override { jdk = jdk.jdk8; })
+    (pkgs.maven.override { jdk_headless = jdk.jdk8; })
 
     iterm2
     telegram-desktop

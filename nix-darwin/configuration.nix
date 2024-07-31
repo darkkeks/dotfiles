@@ -2,7 +2,6 @@
 {
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
-    _1password-gui
     spotify
     vscode
     agenix
@@ -59,7 +58,6 @@
   nixpkgs.config = {
     # Whitelist packages with unfree licences.
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "1password"
       "spotify"
       "vscode"
     ];
@@ -90,6 +88,7 @@
       "darkkeks/xkbswitch/xkbswitch"
     ];
     casks = [
+      "1password"
       "discord"
       "firefox"
       "google-chrome"
@@ -108,6 +107,7 @@
 
   # Run kmonad in background.
   # TODO(darkkeks): Does not start on reboot.
+  # TODO(darkkeks): When binary path changes needs to be added to system input monitoring whitelist manually.
   launchd.agents.kmonad = {
     serviceConfig = {
       Label = "kmonad";
