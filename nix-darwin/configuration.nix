@@ -47,6 +47,12 @@
     inputs.kmonad.overlays.default
   ];
 
+  # Configure kmonad.
+  services.kmonad = {
+    enable = true;
+    config = ./kmonad/caps-lock-arrows.kbd;
+  };
+
   age = {
     identityPaths = [ "/Users/darkkeks/.ssh/id_ed25519" ];
     secrets = {
@@ -102,23 +108,6 @@
     ];
     masApps = {
       Magnet = 441258766;
-    };
-  };
-
-  # Run kmonad in background.
-  # TODO(darkkeks): Does not start on reboot.
-  # TODO(darkkeks): When binary path changes needs to be added to system input monitoring whitelist manually.
-  launchd.agents.kmonad = {
-    serviceConfig = {
-      Label = "kmonad";
-      ProgramArguments = [
-        "${pkgs.kmonad}/bin/kmonad"
-        (toString ./kmonad/caps-lock-arrows.kbd)
-      ];
-      StandardOutPath = "/var/log/kmonad.out.log";
-      StandardErrorPath = "/var/log/kmonad.err.log";
-      RunAtLoad = true;
-      KeepAlive = true;
     };
   };
 }

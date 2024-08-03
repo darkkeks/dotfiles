@@ -36,6 +36,7 @@
       specialArgs = { inherit inputs username; };
       modules = [
         ./configuration.nix
+        ./kmonad.nix
 
         agenix.darwinModules.default
 
