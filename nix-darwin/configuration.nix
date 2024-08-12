@@ -104,6 +104,7 @@
       "macfuse"
       "notion"
       "obs"
+      "pinta"
       "wireshark"
     ];
     masApps = {
