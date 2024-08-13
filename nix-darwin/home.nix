@@ -42,6 +42,7 @@ in
     mdcat
     pv
     transmission
+    vlc-bin
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
