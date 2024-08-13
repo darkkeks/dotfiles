@@ -41,6 +41,7 @@ in
     jq
     mdcat
     pv
+    transmission
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
