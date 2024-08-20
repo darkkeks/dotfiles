@@ -19,6 +19,7 @@ in
   home.stateVersion = "23.11";
 
   home.packages = with pkgs; [
+    curl
     coreutils
     gnugrep
     gnused
