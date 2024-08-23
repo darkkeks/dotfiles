@@ -20,6 +20,7 @@
 )
 
 (defalias caps (layer-toggle caps))
+(defalias fn (layer-toggle fn))
 
 (deflayer qwerty
   _      _      _      _      _      _      _      _      _      _      _      _      _
@@ -27,9 +28,17 @@
   _      _      _      _      _      _      _      _      _      _      _      _      _      _
   @caps  _      _      _      _      _      _      _      _      _      _      _      _
   _      _      _      _      _      _      _      _      _      _      _      _      _
-  _      _      _      _                    _                    _      _      _      _      _
+  @fn    _      _      _                    _                    _      _      _      _      _
 )
 
+(deflayer fn
+  _      brdn   brup   lp     mctl   bldn   blup   prev   pp     next   mute   vold   volu
+  _      _      _      _      _      _      _      _      _      _      _      _      _      del
+  _      _      _      _      _      _      _      _      _      _      _      _      _      _
+  _      _      _      _      _      _      _      _      _      _      _      _      _
+  _      _      _      _      _      _      _      _      _      _      _      _      _
+  _      _      _      _                    _                    _      _      _      _      _
+)
 
 (deflayer caps
   _      _      _      _      _      _      _      _      _      _      _      _      _
