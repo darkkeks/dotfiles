@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+ROOT=$(arc root)
+exec "$ROOT"/direct/bin/ya-idea "$@"
