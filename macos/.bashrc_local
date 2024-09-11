@@ -12,15 +12,6 @@ export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 # Add yc to PATH
 [[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
 
-# Add nvm to PATH, and load completion
-# (takes > 100ms, so should be used on demand)
-function init-nvm {
-    [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \
-        . "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
-    [ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \
-        . "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
-}
-
 ## ARC
 
 ARC_DIR=~/repo
@@ -59,10 +50,6 @@ function colored-ssh {
 EXECUTER_CONF=~/.executer.conf
 # WA for executer not working on macos
 export PERL_LWP_SSL_VERIFY_HOSTNAME=0
-
-# Add yandex internal certificate for node
-# Fixes "self signed certificate in chain" errors
-export NODE_EXTRA_CA_CERTS="/etc/ssl/certs/YandexInternalRootCA.pem"
 
 # Alias for unused-code sub-issues
 function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s "$summary" --do "$@"; }
