@@ -44,6 +44,7 @@ in
     pv
     transmission
     vlc-bin
+    pyright
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
