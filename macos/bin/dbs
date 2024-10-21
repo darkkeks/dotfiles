@@ -1,4 +1,6 @@
 #!/bin/bash
 
 # Connect to unit-tests database
-docker exec -it direct_mysql mysql -u root $@
+OPTS=
+[[ -t 0 ]] && OPTS="-t"
+docker exec $OPTS -i direct_mysql mysql -u root $@
