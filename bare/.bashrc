@@ -12,6 +12,9 @@ HISTFILESIZE=-1
 # add commands to history file immediately, otherwise shell history can be lost sometimes
 PROMPT_COMMAND='history -a'
 
+# set locale
+export LC_ALL="en_US.UTF-8"
+
 # use vim as default editor
 EDITOR=vim
 
