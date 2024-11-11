@@ -105,4 +105,7 @@ in
   home.file.".m2/settings-security.xml" = {
     source = config.lib.file.mkOutOfStoreSymlink /run/agenix/maven-settings-security;
   };
+
+  # Forbid adding hooks to arcconfig.
+  home.file.".arcconfig".source = config.lib.file.mkOutOfStoreSymlink /dev/null;
 }
