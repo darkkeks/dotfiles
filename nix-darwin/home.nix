@@ -46,6 +46,8 @@ in
     vlc-bin
     pyright
 
+    rustup
+
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
 
