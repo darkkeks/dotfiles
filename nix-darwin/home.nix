@@ -19,7 +19,6 @@ in
   home.stateVersion = "23.11";
 
   home.packages = with pkgs; [
-    curl
     coreutils
     gnugrep
     gnused
@@ -45,7 +44,7 @@ in
     transmission
     vlc-bin
     pyright
-
+    pyenv
     rustup
 
     # Use maven with jdk8.
