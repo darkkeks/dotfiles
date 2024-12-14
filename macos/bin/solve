@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -e
+
+
+## Parse arguments.
+ARGS=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -r|--release)
+      BUILD_TYPE=Release
+      shift
+      ;;
+    -c|--clean)
+      CLEAN=1
+      shift
+      ;;
+    -n|--build)
+      BUILD_ONLY=1
+      shift
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+set -- "${ARGS[@]}"
+
+
+## Setup arguments.
+SOURCE_FILE=${1:-A.cpp}
+
+BUILD_TYPE=${BUILD_TYPE:-Debug}
+BUILD_ONLY=${BUILD_ONLY:-}
+CLEAN=${CLEAN:-}
+
+
+## Build.
+SOURCE_ROOT=$(pwd)
+BUILD_ROOT=build/"$SOURCE_FILE"/"$BUILD_TYPE"
+BIN=solution
+
+[[ -n "$CLEAN" ]] && rm -rf "$BUILD_ROOT" ||:
+cmake \
+    -B="$BUILD_ROOT" \
+    -S="$SOURCE_ROOT" \
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+    -DSOURCE_FILE="$SOURCE_FILE"
+cmake --build "$BUILD_ROOT"
+
+cp "$BUILD_ROOT"/solution "$BIN"
+cp "$BUILD_ROOT"/compile_commands.json .
+
+[[ -n "$BUILD_ONLY" ]] && exit
+
+## Run.
+printf "\033[0;32mRunning %s\033[0m\n" "./$BIN"
+
+# Fixes some macos/clang weirdness that produces warnings when running under asan:
+# > solution(35547,0x1e3015ec0) malloc: nano zone abandoned due to inability to reserve vm space.
+export MallocNanoZone=0
+
+exec "$BUILD_ROOT"/solution
