@@ -41,7 +41,7 @@ in
     jq
     mdcat
     pv
-    transmission
+    transmission_4
     vlc-bin
     pyright
     pyenv
@@ -58,7 +58,7 @@ in
     docker
     colima
 
-    nerdfonts
+    nerd-fonts.jetbrains-mono
   ] ++ [
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
