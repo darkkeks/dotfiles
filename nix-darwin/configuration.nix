@@ -104,6 +104,7 @@
       "notion"
       "obs"
       "pinta"
+      "steam"
       "wireshark"
     ];
     masApps = {
