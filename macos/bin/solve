@@ -46,7 +46,7 @@ BUILD_ROOT=build/"$SOURCE_FILE"/"$BUILD_TYPE"
 BIN=solution
 
 [[ -n "$CLEAN" ]] && rm -rf "$BUILD_ROOT" ||:
-cmake \
+[[ ! -d "$BUILD_ROOT" ]] && cmake \
     -B="$BUILD_ROOT" \
     -S="$SOURCE_ROOT" \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \

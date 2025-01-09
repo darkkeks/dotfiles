@@ -1,0 +1,28 @@
+snippet base
+    #include <bits/stdc++.h>
+    #define debug if (!ONLINE_JUDGE)
+    using namespace std;
+
+    void solve() {
+        $0
+    }
+
+    int main() {
+        cin.tie(nullptr)->sync_with_stdio(false);
+        int t = 1;
+        cin >> t;
+        while (t--) solve();
+    }
+
+snippet uin
+    template<typename T>
+    bool uin(T &a, const T &b) {
+        return b < a ? (a = b, true) : false;
+    }
+
+snippet uax
+    template<typename T>
+    bool uax(T &a, const T &b) {
+        return b > a ? (a = b, true) : false;
+    }
+

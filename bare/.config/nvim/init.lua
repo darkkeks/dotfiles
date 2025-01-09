@@ -108,8 +108,8 @@ require("lazy").setup({
       event = 'InsertEnter',
       dependencies = {
         -- Snippet Engine & its associated nvim-cmp source
-        -- {
-        --   'L3MON4D3/LuaSnip',
+        {
+          'L3MON4D3/LuaSnip',
         --   build = (function()
         --     -- Build Step is needed for regex support in snippets.
         --     -- This step is not supported in many windows environments.
@@ -130,8 +130,8 @@ require("lazy").setup({
         --     --   end,
         --     -- },
         --   },
-        -- },
-        -- 'saadparwaiz1/cmp_luasnip',
+        },
+        'saadparwaiz1/cmp_luasnip',
 
         -- Adds other completion capabilities.
         --  nvim-cmp does not ship with all sources by default. They are split
@@ -142,15 +142,19 @@ require("lazy").setup({
       config = function()
         -- See `:help cmp`
         local cmp = require 'cmp'
-        -- local luasnip = require 'luasnip'
-        -- luasnip.config.setup {}
+
+        -- Setup luanip.
+        local luasnip = require 'luasnip'
+        luasnip.config.setup {}
+
+        require("luasnip.loaders.from_snipmate").lazy_load()
 
         cmp.setup {
-          -- snippet = {
-          --   expand = function(args)
-          --     luasnip.lsp_expand(args.body)
-          --   end,
-          -- },
+          snippet = {
+            expand = function(args)
+              luasnip.lsp_expand(args.body)
+            end,
+          },
           -- completion = { completeopt = 'menu,menuone,noinsert' },
 
           -- For an understanding of why these mappings were
@@ -212,7 +216,7 @@ require("lazy").setup({
             --   group_index = 0,
             -- },
             { name = 'nvim_lsp' },
-            -- { name = 'luasnip' },
+            { name = 'luasnip' },
             { name = 'path' },
           },
         }
