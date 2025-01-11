@@ -41,7 +41,20 @@ CLEAN=${CLEAN:-}
 
 
 ## Build.
-SOURCE_ROOT=$(pwd)
+function find_source_root {
+    local root="$PWD"
+    while ! test -e "$root/CMakeLists.txt"; do
+        if test "$root" == "/"; then
+            echo "$0: could not find CMakeLists.txt in current or parent directories"
+            exit 1
+        fi
+        root=$(dirname "$root")
+    done
+    echo "$root"
+}
+
+SOURCE_ROOT=$(find_source_root)
+SOURCE_FROM_ROOT=$(realpath -s --relative-to "$SOURCE_ROOT" "$SOURCE_FILE")
 BUILD_ROOT=build/"$SOURCE_FILE"/"$BUILD_TYPE"
 BIN=solution
 
@@ -50,7 +63,7 @@ BIN=solution
     -B="$BUILD_ROOT" \
     -S="$SOURCE_ROOT" \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-    -DSOURCE_FILE="$SOURCE_FILE"
+    -DSOURCE_FILE="$SOURCE_FROM_ROOT"
 cmake --build "$BUILD_ROOT"
 
 cp "$BUILD_ROOT"/solution "$BIN"
