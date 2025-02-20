@@ -56,6 +56,10 @@ in
     vscode
     iterm2
     telegram-desktop
+    discord
+    keycastr
+    google-chrome
+    jetbrains.idea-community
 
     docker
     colima

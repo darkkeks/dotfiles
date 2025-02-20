@@ -64,6 +64,8 @@
     allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
       "spotify"
       "vscode"
+      "discord"
+      "google-chrome"
     ];
   };
 
@@ -93,11 +95,8 @@
     ];
     casks = [
       "1password"
-      "discord"
       "firefox"
-      "google-chrome"
       "intellij-idea-ce"
-      "keycastr"
       "macfuse"
       "notion"
       "obs"
