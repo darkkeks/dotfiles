@@ -52,6 +52,8 @@ in
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
 
+    spotify
+    vscode
     iterm2
     telegram-desktop
 

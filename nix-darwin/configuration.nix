@@ -2,8 +2,6 @@
 {
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
-    spotify
-    vscode
     agenix
     kmonad
   ];
