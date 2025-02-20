@@ -25,9 +25,15 @@
       url = "git+https://github.com/kmonad/kmonad?submodules=1&dir=nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    mac-app-util = {
+      url = "github:hraban/mac-app-util";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.systems.follows = "agenix/systems";
+    };
   };
 
-  outputs = inputs@{ nix-darwin, nixpkgs, home-manager, agenix, ... }:
+  outputs = inputs@{ nix-darwin, nixpkgs, home-manager, agenix, mac-app-util, ... }:
   let
     username = "darkkeks";
     # Build darwin flake using:
@@ -39,12 +45,16 @@
         ./kmonad.nix
 
         agenix.darwinModules.default
+        mac-app-util.darwinModules.default
 
         home-manager.darwinModules.home-manager {
           home-manager.useGlobalPkgs = true;
           # home-manager.useUserPackages = true;
           home-manager.users.${username} = import ./home.nix;
-          home-manager.extraSpecialArgs = { inherit inputs username; };
+          home-manager.extraSpecialArgs = { inherit username; };
+          home-manager.sharedModules = [
+            mac-app-util.homeManagerModules.default
+          ];
         }
       ];
     };

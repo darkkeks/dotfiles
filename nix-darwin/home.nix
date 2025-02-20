@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, username, ... }:
+{ config, pkgs, username, ... }:
 let
   arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
