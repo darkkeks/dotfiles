@@ -9,10 +9,6 @@ export PATH="/opt/homebrew/bin:/opt/homebrew/sbin${PATH+:$PATH}";
 export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
 export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 
-# TODO: Отказаться или узаконить.
-PATH="$HOMEBREW_PREFIX/opt/llvm/bin:$PATH"
-export LDFLAGS="-L$HOMEBREW_PREFIX/opt/llvm/lib/c++"
-
 # Add yc to PATH
 [[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
 

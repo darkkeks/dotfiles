@@ -28,7 +28,7 @@ in
     htop
     neovim
     stow
-    percona-server
+    # percona-server
     postgresql
     tree
     watch

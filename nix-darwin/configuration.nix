@@ -92,7 +92,6 @@
     brews = [
       "darkkeks/xkbswitch/libxkbswitch"
       "darkkeks/xkbswitch/xkbswitch"
-      "llvm"
     ];
     casks = [
       "1password"
