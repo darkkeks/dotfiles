@@ -48,6 +48,7 @@ in
     rustup
     clang
     cmake
+    ncdu
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
