@@ -31,9 +31,21 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.systems.follows = "agenix/systems";
     };
+
+    yandex = {
+      url = "path:/arc/junk/darkkeks/nix";
+    };
   };
 
-  outputs = inputs@{ nix-darwin, nixpkgs, home-manager, agenix, mac-app-util, ... }:
+  outputs = inputs@{
+    nix-darwin,
+    nixpkgs,
+    home-manager,
+    agenix,
+    mac-app-util,
+    yandex,
+    ...
+  }:
   let
     username = "darkkeks";
     # Build darwin flake using:
@@ -54,6 +66,7 @@
           home-manager.extraSpecialArgs = { inherit username; };
           home-manager.sharedModules = [
             mac-app-util.homeManagerModules.default
+            yandex.homeManagerModules.default
           ];
         }
       ];

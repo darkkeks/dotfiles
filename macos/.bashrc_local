@@ -17,8 +17,10 @@ export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 ARC_DIR=~/repo
 
 # https://coolors.co/ffbe0b-fb5607-ff006e-8338ec-3a86ff-00ffff
+ROOT_COLOR=(660000)
 ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
 
+alias r0="cd /arc; iterm-tab-colors ${ROOT_COLOR[0]}"
 alias r1="cd $ARC_DIR/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
 alias r2="cd $ARC_DIR/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
 alias r3="cd $ARC_DIR/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
@@ -27,6 +29,7 @@ alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
 alias rb="cd $ARC_DIR/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
 
 function mount-all {
+    arc mount -m /arc -S /var/lib/arc/store --object-store /var/lib/arc/object-store
     arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/a2" -S "$ARC_DIR/s2" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/a3" -S "$ARC_DIR/s3" --object-store "$ARC_DIR/object-store"

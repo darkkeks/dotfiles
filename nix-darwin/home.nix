@@ -1,8 +1,6 @@
 { config, pkgs, username, ... }:
 let
-  arc = pkgs.callPackage ./arc.nix {};
   jdk = pkgs.callPackage ./jdk.nix {};
-  skotty = pkgs.callPackage ./skotty.nix {};
   yourkit = pkgs.callPackage ./yourkit.nix {};
 in
 {
@@ -66,7 +64,7 @@ in
     colima
 
     nerd-fonts.jetbrains-mono
-  ] ++ [
+
     (pkgs.python3.withPackages (ppkgs: [
         ppkgs.requests
         ppkgs.click
@@ -74,9 +72,7 @@ in
 
         (ppkgs.callPackage ./yandex-tracker-client.nix {})
     ]))
-  ] ++ [
-    arc
-    skotty
+
     yourkit
   ];
 

@@ -193,7 +193,8 @@
         "kmonad": "kmonad",
         "mac-app-util": "mac-app-util",
         "nix-darwin": "nix-darwin",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "yandex": "yandex"
       }
     },
     "systems": {
@@ -209,6 +210,18 @@
         "owner": "nix-systems",
         "repo": "default",
         "type": "github"
+      }
+    },
+    "yandex": {
+      "locked": {
+        "lastModified": 1741081320,
+        "narHash": "sha256-LBTCIdgVV+I95GbiArcgSpZswVnJJHbYV0XR1ALoSVg=",
+        "path": "/arc/junk/darkkeks/nix",
+        "type": "path"
+      },
+      "original": {
+        "path": "/arc/junk/darkkeks/nix",
+        "type": "path"
       }
     }
   },
