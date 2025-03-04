@@ -1,7 +1,12 @@
-{ config, pkgs, username, ... }:
+{
+  config,
+  pkgs,
+  username,
+  ...
+}:
 let
-  jdk = pkgs.callPackage ./jdk.nix {};
-  yourkit = pkgs.callPackage ./yourkit.nix {};
+  jdk = pkgs.callPackage ./jdk.nix { };
+  yourkit = pkgs.callPackage ./yourkit.nix { };
 in
 {
   home.username = username;
@@ -66,11 +71,11 @@ in
     nerd-fonts.jetbrains-mono
 
     (pkgs.python3.withPackages (ppkgs: [
-        ppkgs.requests
-        ppkgs.click
-        ppkgs.yq
+      ppkgs.requests
+      ppkgs.click
+      ppkgs.yq
 
-        (ppkgs.callPackage ./yandex-tracker-client.nix {})
+      (ppkgs.callPackage ./yandex-tracker-client.nix { })
     ]))
 
     yourkit

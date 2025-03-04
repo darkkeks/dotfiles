@@ -37,44 +37,46 @@
     };
   };
 
-  outputs = inputs@{
-    nix-darwin,
-    nixpkgs,
-    home-manager,
-    agenix,
-    mac-app-util,
-    yandex,
-    ...
-  }:
-  let
-    username = "darkkeks";
-    # Build darwin flake using:
-    # $ darwin-rebuild build --flake .
-    configuration = nix-darwin.lib.darwinSystem {
-      specialArgs = { inherit inputs username; };
-      modules = [
-        ./configuration.nix
-        ./kmonad.nix
+  outputs =
+    inputs@{
+      nix-darwin,
+      nixpkgs,
+      home-manager,
+      agenix,
+      mac-app-util,
+      yandex,
+      ...
+    }:
+    let
+      username = "darkkeks";
+      # Build darwin flake using:
+      # $ darwin-rebuild build --flake .
+      configuration = nix-darwin.lib.darwinSystem {
+        specialArgs = { inherit inputs username; };
+        modules = [
+          ./configuration.nix
+          ./kmonad.nix
 
-        agenix.darwinModules.default
-        mac-app-util.darwinModules.default
+          agenix.darwinModules.default
+          mac-app-util.darwinModules.default
 
-        home-manager.darwinModules.home-manager {
-          home-manager.useGlobalPkgs = true;
-          # home-manager.useUserPackages = true;
-          home-manager.users.${username} = import ./home.nix;
-          home-manager.extraSpecialArgs = { inherit username; };
-          home-manager.sharedModules = [
-            mac-app-util.homeManagerModules.default
-            yandex.homeManagerModules.default
-          ];
-        }
-      ];
+          home-manager.darwinModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            # home-manager.useUserPackages = true;
+            home-manager.users.${username} = import ./home.nix;
+            home-manager.extraSpecialArgs = { inherit username; };
+            home-manager.sharedModules = [
+              mac-app-util.homeManagerModules.default
+              yandex.homeManagerModules.default
+            ];
+          }
+        ];
+      };
+    in
+    {
+      darwinConfigurations."darkkeks-mac" = configuration;
+      # Expose the package set, including overlays, for convenience.
+      darwinPackages = configuration.pkgs;
     };
-  in
-  {
-    darwinConfigurations."darkkeks-mac" = configuration;
-    # Expose the package set, including overlays, for convenience.
-    darwinPackages = configuration.pkgs;
-  };
 }

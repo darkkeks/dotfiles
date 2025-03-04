@@ -1,4 +1,10 @@
-{ pkgs, lib, inputs, username, ... }:
+{
+  pkgs,
+  lib,
+  inputs,
+  username,
+  ...
+}:
 {
   # List packages installed in system profile.
   environment.systemPackages = with pkgs; [
@@ -26,7 +32,7 @@
   # Used for backwards compatibility, please read the changelog before changing.
   # $ darwin-rebuild changelog
   system.stateVersion = 4;
-    
+
   # Some System Settings that can be configured automatically.
   system.defaults = {
     NSGlobalDomain.ApplePressAndHoldEnabled = false;
@@ -61,12 +67,14 @@
 
   nixpkgs.config = {
     # Whitelist packages with unfree licences.
-    allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [
-      "spotify"
-      "vscode"
-      "discord"
-      "google-chrome"
-    ];
+    allowUnfreePredicate =
+      pkg:
+      builtins.elem (lib.getName pkg) [
+        "spotify"
+        "vscode"
+        "discord"
+        "google-chrome"
+      ];
   };
 
   users.users = {

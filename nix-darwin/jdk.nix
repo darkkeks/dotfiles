@@ -1,4 +1,9 @@
-{ stdenv, fetchurl, fetchzip, ... }:
+{
+  stdenv,
+  fetchurl,
+  fetchzip,
+  ...
+}:
 let
   jdk8 = stdenv.mkDerivation {
     pname = "yandex-jdk";
@@ -95,6 +100,12 @@ let
       platforms = [ "aarch64-darwin" ];
     };
   };
-in {
-  inherit jdk8 jdk11 jdk15 jdk17;
+in
+{
+  inherit
+    jdk8
+    jdk11
+    jdk15
+    jdk17
+    ;
 }

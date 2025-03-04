@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   cfg = config.services.kmonad;
@@ -30,7 +35,8 @@ in
       serviceConfig = {
         Label = "kmonad";
         ProgramArguments = [
-          "/bin/sh" "-c"
+          "/bin/sh"
+          "-c"
           "/bin/wait4path ${pkgs.kmonad}/bin/kmonad &amp;&amp; exec ${pkgs.kmonad}/bin/kmonad ${cfg.config}"
         ];
         StandardOutPath = "/var/log/kmonad.out.log";

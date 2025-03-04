@@ -1,8 +1,9 @@
-{ lib
-, buildPythonPackage
-, fetchFromGitHub
-, six
-, requests
+{
+  lib,
+  buildPythonPackage,
+  fetchFromGitHub,
+  six,
+  requests,
 }:
 
 buildPythonPackage {
