@@ -74,6 +74,7 @@
         "vscode"
         "discord"
         "google-chrome"
+        "idea-ultimate"
       ];
   };
 

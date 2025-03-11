@@ -64,6 +64,7 @@ in
     keycastr
     google-chrome
     jetbrains.idea-community
+    jetbrains.idea-ultimate
 
     docker
     colima
