@@ -105,7 +105,6 @@
     casks = [
       "1password"
       "firefox"
-      "intellij-idea-ce"
       "macfuse"
       "notion"
       "obs"
