@@ -52,6 +52,7 @@ in
     clang
     cmake
     ncdu
+    uv
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
@@ -69,6 +70,8 @@ in
     colima
 
     nerd-fonts.jetbrains-mono
+
+    nodejs
 
     (pkgs.python3.withPackages (ppkgs: [
       ppkgs.requests
@@ -109,6 +112,10 @@ in
   home.file.jdk17 = {
     target = "Library/Java/JavaVirtualMachines/yandex-jdk-17";
     source = jdk.jdk17.home;
+  };
+  home.file.jdk21 = {
+    target = "Library/Java/JavaVirtualMachines/yandex-jdk-21";
+    source = jdk.jdk21.home;
   };
 
   # Configure maven.

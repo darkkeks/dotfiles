@@ -100,6 +100,28 @@ let
       platforms = [ "aarch64-darwin" ];
     };
   };
+  jdk21 = stdenv.mkDerivation {
+    pname = "yandex-jdk";
+    version = "21.0.5+11";
+    src = fetchzip {
+      url = "https://proxy.sandbox.yandex-team.ru/7830390213";
+      hash = "sha256-KaucDh5kYkzMcavzlEkbycCWVAsTpKJZeUJFwrMtk9M=";
+      extension = "tar.gz";
+      stripRoot = false;
+    };
+    buildPhase = ''
+      mkdir -p $out/lib/
+      cp -r $src $out/lib/openjdk
+
+      ln -s $out/lib/openjdk/bin $out/bin
+    '';
+    passthru = {
+      home = "${jdk21}/lib/openjdk";
+    };
+    meta = {
+      platforms = [ "aarch64-darwin" ];
+    };
+  };
 in
 {
   inherit
@@ -107,5 +129,6 @@ in
     jdk11
     jdk15
     jdk17
+    jdk21
     ;
 }
