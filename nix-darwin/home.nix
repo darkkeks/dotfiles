@@ -84,8 +84,7 @@ in
     yourkit
   ];
 
-  home.sessionVariables = {
-  };
+  home.sessionVariables = { };
 
   # Make font packages discoverable by MacOS.
   fonts.fontconfig.enable = true;

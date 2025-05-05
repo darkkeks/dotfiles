@@ -75,6 +75,8 @@
       };
     in
     {
+      formatter.aarch64-darwin = nixpkgs.legacyPackages.aarch64-darwin.nixfmt-rfc-style;
+
       darwinConfigurations."darkkeks-mac" = configuration;
       # Expose the package set, including overlays, for convenience.
       darwinPackages = configuration.pkgs;
