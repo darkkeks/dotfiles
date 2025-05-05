@@ -54,6 +54,12 @@
     config = ./kmonad/caps-lock-arrows.kbd;
   };
 
+  # Enable touch-id for sudo.
+  security.pam.services.sudo_local = {
+    enable = true;
+    watchIdAuth = true;
+  };
+
   age = {
     identityPaths = [ "/Users/darkkeks/.ssh/id_ed25519" ];
     secrets = {
