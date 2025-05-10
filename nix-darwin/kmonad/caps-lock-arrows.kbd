@@ -31,12 +31,27 @@
   @fn    _      _      _                    _                    _      _      _      _      _
 )
 
+(defalias
+  hQ C-A-M-S-q
+  hW C-A-M-S-w
+  hE C-A-M-S-e
+  hR C-A-M-S-r
+  hA C-A-M-S-a
+  hS C-A-M-S-s
+  hD C-A-M-S-d
+  hF C-A-M-S-f
+  hZ C-A-M-S-z
+  hX C-A-M-S-x
+  hC C-A-M-S-c
+  hV C-A-M-S-v
+)
+
 (deflayer fn
   _      brdn   brup   lp     mctl   bldn   blup   prev   pp     next   mute   vold   volu
   _      _      _      _      _      _      _      _      _      _      _      _      _      del
-  _      _      _      _      _      _      _      _      _      _      _      _      _      _
-  _      _      _      _      _      _      _      _      _      _      _      _      _
-  _      _      _      _      _      _      _      _      _      _      _      _      _
+  _      @hQ    @hW    @hE    @hR    _      _      _      _      _      _      _      _      _
+  _      @hA    @hS    @hD    @hF    _      _      _      _      _      _      _      _
+  _      @hZ    @hX    @hC    @hV    _      _      _      _      _      _      _      _
   _      _      _      _                    _                    _      _      _      _      _
 )
 
