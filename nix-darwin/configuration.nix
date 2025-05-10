@@ -78,6 +78,7 @@
         "discord"
         "google-chrome"
         "idea-ultimate"
+        "raycast"
       ];
   };
 

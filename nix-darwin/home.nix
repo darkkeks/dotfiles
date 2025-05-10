@@ -70,6 +70,7 @@ in
     keycastr
     google-chrome
     jetbrains.idea-ultimate
+    raycast
 
     docker
     colima
