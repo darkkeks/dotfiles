@@ -121,8 +121,8 @@ in
 
   # Configure bash.
   home.file.".bashrc".source = dotfilesSymlink "./bare/.bashrc";
+  home.file.".profile".source = dotfilesSymlink "./bare/.profile";
   home.file.".bashrc_local".source = dotfilesSymlink "./macos/.bashrc_local";
-  home.file.".profile".source = dotfilesSymlink "./macos/.profile";
 
   # Configure iTerm2.
   home.file.".config/iterm2/com.googlecode.iterm2.plist".source =
