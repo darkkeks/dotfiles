@@ -32,7 +32,7 @@ alias ll='ls -lah'
 alias vim='nvim'
 
 # add local bin directory to PATH
-PATH="$PATH:$HOME/bin"
+PATH="$HOME/bin:$PATH"
 
 # add python local bin directory to PATH
 [[ -d ~/.local/bin ]] && PATH="$PATH:$HOME/.local/bin"
