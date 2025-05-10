@@ -7,10 +7,16 @@
 let
   jdk = pkgs.callPackage ./jdk.nix { };
   yourkit = pkgs.callPackage ./yourkit.nix { };
+
+  homeDirectory = "/Users/${username}";
+
+  # TODO(darkkeks): https://github.com/nix-community/home-manager/issues/2085 :(
+  dotfilesPath = "./dotfiles";
+  dotfilesSymlink = path: config.lib.file.mkOutOfStoreSymlink (homeDirectory + "/" + dotfilesPath + "/" + path);
 in
 {
   home.username = username;
-  home.homeDirectory = "/Users/${username}";
+  home.homeDirectory = homeDirectory;
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -114,49 +120,32 @@ in
   };
 
   # Configure bash.
-  home.file.".bashrc".source = ../bare/.bashrc;
-  home.file.".bashrc_local".source = ../macos/.bashrc_local;
-  home.file.".profile".source = ../bare/.profile;
+  home.file.".bashrc".source = dotfilesSymlink "./bare/.bashrc";
+  home.file.".bashrc_local".source = dotfilesSymlink "./macos/.bashrc_local";
+  home.file.".profile".source = dotfilesSymlink "./macos/.profile";
 
   # Configure iTerm2.
-  home.file.".config/iterm2/com.googlecode.iterm2.plist" = {
-    source = config.lib.file.mkOutOfStoreSymlink ../macos/.config/iterm2/com.googlecode.iterm2.plist;
-  };
+  home.file.".config/iterm2/com.googlecode.iterm2.plist".source =
+    dotfilesSymlink "./macos/.config/iterm2/com.googlecode.iterm2.plist";
 
   # Configure ssh.
-  home.file.".ssh/config".source = config.lib.file.mkOutOfStoreSymlink ../macos/.ssh/config;
+  home.file.".ssh/config".source = dotfilesSymlink "./macos/.ssh/config";
 
   # Configure (neo)vim.
-  home.file.".config/nvim" = {
-    source = ./../bare/.config/nvim;
-    recursive = true;
-  };
+  home.file.".config/nvim/init.lua".source = dotfilesSymlink "./bare/.config/nvim/init.lua";
+  home.file.".config/nvim/snippets".source = dotfilesSymlink "./bare/.config/nvim/snippets";
 
   # Configure JVMs.
   programs.java = {
     enable = true;
     package = jdk.jdk17;
   };
-  home.file.jdk8 = {
-    target = "Library/Java/JavaVirtualMachines/yandex-jdk-8";
-    source = jdk.jdk8.home;
-  };
-  home.file.jdk11 = {
-    target = "Library/Java/JavaVirtualMachines/yandex-jdk-11";
-    source = jdk.jdk11.home;
-  };
-  home.file.jdk15 = {
-    target = "Library/Java/JavaVirtualMachines/yandex-jdk-15";
-    source = jdk.jdk15.home;
-  };
-  home.file.jdk17 = {
-    target = "Library/Java/JavaVirtualMachines/yandex-jdk-17";
-    source = jdk.jdk17.home;
-  };
-  home.file.jdk21 = {
-    target = "Library/Java/JavaVirtualMachines/yandex-jdk-21";
-    source = jdk.jdk21.home;
-  };
+
+  home.file."Library/Java/JavaVirtualMachines/yandex-jdk-8".source = jdk.jdk8.home;
+  home.file."Library/Java/JavaVirtualMachines/yandex-jdk-11".source = jdk.jdk11.home;
+  home.file."Library/Java/JavaVirtualMachines/yandex-jdk-15".source = jdk.jdk15.home;
+  home.file."Library/Java/JavaVirtualMachines/yandex-jdk-17".source = jdk.jdk17.home;
+  home.file."Library/Java/JavaVirtualMachines/yandex-jdk-21".source = jdk.jdk21.home;
 
   # Configure maven.
   home.file.".m2/settings.xml".source = ./m2/settings.xml;
