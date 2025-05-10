@@ -29,7 +29,7 @@ alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
 alias rb="cd $ARC_DIR/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
 
 function mount-all {
-    arc mount -m /arc -S /var/lib/arc/store --object-store /var/lib/arc/object-store
+    arc mount -m /arc/lib/arc/arcadia -S /var/lib/arc/store --object-store /var/lib/arc/object-store
     arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/a2" -S "$ARC_DIR/s2" --object-store "$ARC_DIR/object-store"
     arc mount -m "$ARC_DIR/a3" -S "$ARC_DIR/s3" --object-store "$ARC_DIR/object-store"
