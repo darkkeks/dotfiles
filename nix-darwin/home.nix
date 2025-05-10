@@ -37,7 +37,6 @@ in
     htop
     neovim
     stow
-    # percona-server
     postgresql
     tree
     watch
@@ -58,6 +57,7 @@ in
     cmake
     ncdu
     uv
+    nh
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
