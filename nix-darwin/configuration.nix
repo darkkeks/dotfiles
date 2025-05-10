@@ -57,7 +57,7 @@
   # Enable touch-id for sudo.
   security.pam.services.sudo_local = {
     enable = true;
-    watchIdAuth = true;
+    touchIdAuth = true;
   };
 
   age = {

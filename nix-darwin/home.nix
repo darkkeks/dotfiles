@@ -39,7 +39,6 @@ in
     rsync
     ripgrep
     bat
-    git
     graphviz
     jq
     mdcat
@@ -72,6 +71,7 @@ in
     nerd-fonts.jetbrains-mono
 
     nodejs
+    bun
 
     (pkgs.python3.withPackages (ppkgs: [
       ppkgs.requests
@@ -89,7 +89,48 @@ in
   # Make font packages discoverable by MacOS.
   fonts.fontconfig.enable = true;
 
-  programs.home-manager.enable = true;
+  # Install and configure configuration.
+  programs.git = {
+    enable = true;
+    userName = "darkkeks";
+    userEmail = "v.boben@yandex.ru";
+  };
+
+  # Install and configure tmux.
+  programs.tmux = {
+    enable = true;
+    # Start enumerating windows with 1.
+    baseIndex = 1;
+    # Non-zero escape-time makes escape input delayed (for example in vim).
+    escapeTime = 0;
+    # Enable mouse support by default.
+    mouse = true;
+    # Increase history limit.
+    historyLimit = 10000;
+    extraConfig = ''
+      # Highlight current window in red
+      set-option -gw window-status-current-style bg=red
+    '';
+  };
+
+  # Configure bash.
+  home.file.".bashrc".source = ../bare/.bashrc;
+  home.file.".bashrc_local".source = ../macos/.bashrc_local;
+  home.file.".profile".source = ../bare/.profile;
+
+  # Configure iTerm2.
+  home.file.".config/iterm2/com.googlecode.iterm2.plist" = {
+    source = config.lib.file.mkOutOfStoreSymlink ../macos/.config/iterm2/com.googlecode.iterm2.plist;
+  };
+
+  # Configure ssh.
+  home.file.".ssh/config".source = config.lib.file.mkOutOfStoreSymlink ../macos/.ssh/config;
+
+  # Configure (neo)vim.
+  home.file.".config/nvim" = {
+    source = ./../bare/.config/nvim;
+    recursive = true;
+  };
 
   # Configure JVMs.
   programs.java = {

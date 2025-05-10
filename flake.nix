@@ -1,5 +1,5 @@
 {
-  description = "darkkeks@ macos configuration";
+  description = "darkkeks@ nix configuration";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -54,8 +54,8 @@
       configuration = nix-darwin.lib.darwinSystem {
         specialArgs = { inherit inputs username; };
         modules = [
-          ./configuration.nix
-          ./kmonad.nix
+          ./nix-darwin/configuration.nix
+          ./nix-darwin/kmonad.nix
 
           agenix.darwinModules.default
           mac-app-util.darwinModules.default
@@ -64,7 +64,7 @@
           {
             home-manager.useGlobalPkgs = true;
             # home-manager.useUserPackages = true;
-            home-manager.users.${username} = import ./home.nix;
+            home-manager.users.${username} = import ./nix-darwin/home.nix;
             home-manager.extraSpecialArgs = { inherit username; };
             home-manager.sharedModules = [
               mac-app-util.homeManagerModules.default
