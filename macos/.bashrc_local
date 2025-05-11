@@ -10,32 +10,30 @@ export MANPATH="/opt/homebrew/share/man${MANPATH+:$MANPATH}:";
 export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 
 # Add yc to PATH
-[[ -d ~/yandex-cloud/bin ]] && PATH="$PATH:$HOME/yandex-cloud/bin"
+[[ -d ~/yandex-cloud/bin ]] && PATH="$HOME/yandex-cloud/bin:$PATH"
 
 ## ARC
-
-ARC_DIR=~/repo
 
 # https://coolors.co/ffbe0b-fb5607-ff006e-8338ec-3a86ff-00ffff
 ROOT_COLOR=(660000)
 ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
 
 alias r0="cd /arc; iterm-tab-colors ${ROOT_COLOR[0]}"
-alias r1="cd $ARC_DIR/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
-alias r2="cd $ARC_DIR/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
-alias r3="cd $ARC_DIR/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
-alias r4="cd $ARC_DIR/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
-alias rt="cd $ARC_DIR/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
-alias rb="cd $ARC_DIR/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
+alias r1="cd ~/repo/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
+alias r2="cd ~/repo/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
+alias r3="cd ~/repo/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
+alias r4="cd ~/repo/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
+alias rt="cd ~/repo/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
+alias rb="cd ~/repo/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
 
 function mount-all {
-    arc mount -m /arc/lib/arc/arcadia -S /var/lib/arc/store --object-store /var/lib/arc/object-store
-    arc mount -m "$ARC_DIR/a1" -S "$ARC_DIR/s1" --object-store "$ARC_DIR/object-store"
-    arc mount -m "$ARC_DIR/a2" -S "$ARC_DIR/s2" --object-store "$ARC_DIR/object-store"
-    arc mount -m "$ARC_DIR/a3" -S "$ARC_DIR/s3" --object-store "$ARC_DIR/object-store"
-    arc mount -m "$ARC_DIR/a4" -S "$ARC_DIR/s4" --object-store "$ARC_DIR/object-store"
-    arc mount -m "$ARC_DIR/at" -S "$ARC_DIR/st" --object-store "$ARC_DIR/object-store"
-    arc mount -m "$ARC_DIR/ab" -S "$ARC_DIR/sb" --object-store "$ARC_DIR/object-store"
+    arc mount -m /var/lib/arc/arcadia -S /var/lib/arc/store --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/a1 -S ~/repo/s1 --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/a2 -S ~/repo/s2 --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/a3 -S ~/repo/s3 --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/a4 -S ~/repo/s4 --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/at -S ~/repo/st --object-store /var/lib/arc/object-store
+    arc mount -m ~/repo/ab -S ~/repo/sb --object-store /var/lib/arc/object-store
 }
 
 ## SSH
@@ -48,14 +46,6 @@ function colored-ssh {
 }
 
 ## OTHER
-
-# Default executer config is in /etc
-EXECUTER_CONF=~/.executer.conf
-# WA for executer not working on macos
-export PERL_LWP_SSL_VERIFY_HOSTNAME=0
-
-# Alias for unused-code sub-issues
-function unused-code { summary="$1"; shift; create-issue.py -p DIRECT-164934 -s "$summary" --do "$@"; }
 
 # Shortcut for local dbs-sql
 function m {
