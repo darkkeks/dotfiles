@@ -73,11 +73,7 @@
     allowUnfreePredicate =
       pkg:
       builtins.elem (lib.getName pkg) [
-        "spotify"
-        "vscode"
-        "discord"
         "google-chrome"
-        "idea-ultimate"
         "raycast"
       ];
   };
@@ -108,12 +104,18 @@
     ];
     casks = [
       "1password"
+      "discord"
       "firefox"
+      "intellij-idea"
+      "iterm2"
       "macfuse"
       "notion"
       "obs"
       "pinta"
+      "spotify"
       "steam"
+      "telegram-desktop"
+      "visual-studio-code"
       "wireshark"
     ];
     masApps = {
