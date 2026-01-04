@@ -133,7 +133,7 @@ in
   # Configure JVMs.
   programs.java = {
     enable = true;
-    package = jdk.jdk17;
+    package = jdk.jdk21;
   };
 
   home.file."Library/Java/JavaVirtualMachines/yandex-jdk-8".source = jdk.jdk8.home;
