@@ -19,13 +19,14 @@ tool="$1"; shift
 
 if [[ -z "$tool" ]]; then
     echo "Usage: $0 [tool-name]"
-elif [[ "$tool" = "--force-update" ]]; then
+elif [[ "$1" = "--force-update" ]]; then
+    shift
     cache-write "$tool" ""
-    exec ya tool --force-update "$@"
+    exec ya tool "$tool" --force-update "$@"
 fi
 
 path=$(jq -r ".[\"$tool\"]" $PATH_CACHE)
-if [[ "$path" = "null" ]]; then
+if [[ "$path" = "null" || "$path" = "" ]]; then
     if path=$(ya tool --print-path $tool 2>/dev/null); then
         cache-write "$tool" "$path"
     else

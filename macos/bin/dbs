@@ -3,4 +3,4 @@
 # Connect to unit-tests database
 OPTS=
 [[ -t 0 ]] && OPTS="-t"
-docker exec $OPTS -i direct_mysql mysql -u root $@
+docker exec $OPTS -i direct_mysql mysql -u root --default-character-set utf8 $@

@@ -14,26 +14,21 @@ export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 
 ## ARC
 
-# https://coolors.co/ffbe0b-fb5607-ff006e-8338ec-3a86ff-00ffff
-ROOT_COLOR=(660000)
-ARC_COLORS=(ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
+# https://coolors.co/660000-ffbe0b-fb5607-ff006e-8338ec-3a86ff-00ffff
+ARC_COLORS=(660000 ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
 
-alias r0="cd /arc; iterm-tab-colors ${ROOT_COLOR[0]}"
-alias r1="cd ~/repo/a1/direct; iterm-tab-colors ${ARC_COLORS[0]}"
-alias r2="cd ~/repo/a2/direct; iterm-tab-colors ${ARC_COLORS[1]}"
-alias r3="cd ~/repo/a3/direct; iterm-tab-colors ${ARC_COLORS[2]}"
-alias r4="cd ~/repo/a4/direct; iterm-tab-colors ${ARC_COLORS[3]}"
-alias rt="cd ~/repo/at/direct; iterm-tab-colors ${ARC_COLORS[4]}"
-alias rb="cd ~/repo/ab/direct; iterm-tab-colors ${ARC_COLORS[5]}"
+alias r0="cd /arc;         iterm-tab-colors ${ARC_COLORS[0]}"
+alias r1="cd ~/a/1/direct; iterm-tab-colors ${ARC_COLORS[1]}"
+alias r2="cd ~/a/2/direct; iterm-tab-colors ${ARC_COLORS[2]}"
+alias r3="cd ~/a/3/direct; iterm-tab-colors ${ARC_COLORS[3]}"
+alias r4="cd ~/a/4/direct; iterm-tab-colors ${ARC_COLORS[4]}"
 
 function mount-all {
     arc mount -m /var/lib/arc/arcadia -S /var/lib/arc/store --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/a1 -S ~/repo/s1 --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/a2 -S ~/repo/s2 --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/a3 -S ~/repo/s3 --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/a4 -S ~/repo/s4 --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/at -S ~/repo/st --object-store /var/lib/arc/object-store
-    arc mount -m ~/repo/ab -S ~/repo/sb --object-store /var/lib/arc/object-store
+    arc mount -m ~/a/1 -S ~/a/s/1 --object-store /var/lib/arc/object-store
+    arc mount -m ~/a/2 -S ~/a/s/2 --object-store /var/lib/arc/object-store
+    arc mount -m ~/a/3 -S ~/a/s/3 --object-store /var/lib/arc/object-store
+    arc mount -m ~/a/4 -S ~/a/s/4 --object-store /var/lib/arc/object-store
 }
 
 ## SSH
@@ -73,6 +68,7 @@ alias grut="ya-tool grut"
 alias infractl="ya-tool infractl"
 alias kubectl="ya-tool kubectl"
 alias logbroker="ya-tool logbroker"
+alias sky="ya-tool sky"
 alias tofu="ya-tool tofu"
 alias yo="ya-tool yo"
 alias yp="ya-tool yp"
