@@ -33,7 +33,7 @@
     };
 
     yandex = {
-      url = "path:/arc/junk/darkkeks/nix";
+      url = "path:/private/var/lib/arc/arcadia/junk/darkkeks/nix";
     };
   };
 
