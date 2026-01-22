@@ -35,6 +35,12 @@
     yandex = {
       url = "path:/private/var/lib/arc/arcadia/junk/darkkeks/nix";
     };
+
+    spicetify = {
+      url = "github:Gerg-L/spicetify-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.systems.follows = "agenix/systems";
+    };
   };
 
   outputs =
@@ -45,6 +51,7 @@
       agenix,
       mac-app-util,
       yandex,
+      spicetify,
       ...
     }:
     let
@@ -65,10 +72,11 @@
             home-manager.useGlobalPkgs = true;
             # home-manager.useUserPackages = true;
             home-manager.users.${username} = import ./nix-darwin/home.nix;
-            home-manager.extraSpecialArgs = { inherit username; };
+            home-manager.extraSpecialArgs = { inherit inputs username; };
             home-manager.sharedModules = [
               mac-app-util.homeManagerModules.default
               yandex.homeManagerModules.default
+              spicetify.homeManagerModules.spicetify
             ];
           }
         ];

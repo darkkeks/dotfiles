@@ -75,6 +75,7 @@
       builtins.elem (lib.getName pkg) [
         "google-chrome"
         "raycast"
+        "spotify"
       ];
   };
 

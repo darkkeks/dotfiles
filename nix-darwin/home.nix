@@ -2,6 +2,7 @@
   config,
   pkgs,
   username,
+  inputs,
   ...
 }:
 let
@@ -112,6 +113,11 @@ in
       # Highlight current window in red
       set-option -gw window-status-current-style bg=red
     '';
+  };
+
+  programs.spicetify = {
+    enable = true;
+    theme = inputs.spicetify.legacyPackages.${pkgs.stdenv.system}.themes.defaultDynamic;
   };
 
   # Configure bash.
