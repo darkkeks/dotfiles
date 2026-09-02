@@ -18,10 +18,10 @@ export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 ARC_COLORS=(660000 ffbe0b fb5607 ff006e 8338ec 3a86ff 00ffff)
 
 alias r0="cd /arc;         iterm-tab-colors ${ARC_COLORS[0]}"
-alias r1="cd ~/a/1/direct; iterm-tab-colors ${ARC_COLORS[1]}"
-alias r2="cd ~/a/2/direct; iterm-tab-colors ${ARC_COLORS[2]}"
-alias r3="cd ~/a/3/direct; iterm-tab-colors ${ARC_COLORS[3]}"
-alias r4="cd ~/a/4/direct; iterm-tab-colors ${ARC_COLORS[4]}"
+alias r1="cd ~/a/1/dikidi; iterm-tab-colors ${ARC_COLORS[1]}"
+alias r2="cd ~/a/2/dikidi; iterm-tab-colors ${ARC_COLORS[2]}"
+alias r3="cd ~/a/3/dikidi; iterm-tab-colors ${ARC_COLORS[3]}"
+alias r4="cd ~/a/4/dikidi; iterm-tab-colors ${ARC_COLORS[4]}"
 
 function mount-all {
     arc mount -m /var/lib/arc/arcadia -S /var/lib/arc/store --object-store /var/lib/arc/object-store
