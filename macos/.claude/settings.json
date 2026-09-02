@@ -1,5 +1,7 @@
 {
-  "model": "opus[1m]",
+  "permissions": {
+    "defaultMode": "auto"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -7,6 +9,31 @@
           {
             "type": "command",
             "command": "\"$HOME/.claude/hooks/iterm-tab-color.sh\" reset"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type session_start --name aisuite_check --agent claude",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type session_start --name opentelemetry --agent claude"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type session_start --name session_state_gc --agent claude"
           }
         ]
       }
@@ -19,6 +46,15 @@
             "command": "\"$HOME/.claude/hooks/iterm-tab-color.sh\" busy"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type prompt_submit --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -28,6 +64,15 @@
             "type": "command",
             "command": "\"$HOME/.claude/hooks/iterm-tab-color.sh\" busy",
             "async": true
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type post_tool_use --name opentelemetry --agent claude",
+            "timeout": 3
           }
         ]
       }
@@ -60,6 +105,15 @@
             "command": "\"$HOME/.claude/hooks/iterm-tab-color.sh\" done"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type stop --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
       }
     ],
     "StopFailure": [
@@ -80,6 +134,84 @@
             "command": "\"$HOME/.claude/hooks/iterm-tab-color.sh\" reset"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type session_end --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/bin/claude-wt-hook\" create",
+            "timeout": 600,
+            "statusMessage": "Creating arc worktree..."
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/bin/claude-wt-hook\" remove",
+            "timeout": 300,
+            "statusMessage": "Removing arc worktree..."
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "matcher": "t",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/open-terminal.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type post_tool_use_failure --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type pre_tool_use --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/darkkeks/.local/share/yandex-aisuite/runner hook run --type pre_compact --name opentelemetry --agent claude",
+            "timeout": 3
+          }
+        ]
       }
     ]
   },
@@ -87,12 +219,14 @@
     "enabled": false
   },
   "effortLevel": "high",
+  "awaySummaryEnabled": false,
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "autoMemoryEnabled": false,
-  "awaySummaryEnabled": false,
   "theme": "light",
+  "autoCompactEnabled": true,
   "voiceEnabled": true
 }
