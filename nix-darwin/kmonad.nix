@@ -43,7 +43,7 @@ in
         ProgramArguments = [
           "/bin/sh"
           "-c"
-          "/bin/wait4path ${pkgs.kmonad}/bin/kmonad &amp;&amp; exec ${pkgs.kmonad}/bin/kmonad ${cfg.config}"
+          "/bin/wait4path ${pkgs.kmonad}/bin/kmonad && exec ${pkgs.kmonad}/bin/kmonad ${cfg.config}"
         ];
         StandardOutPath = "/var/log/kmonad.out.log";
         StandardErrorPath = "/var/log/kmonad.err.log";

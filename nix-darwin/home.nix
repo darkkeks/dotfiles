@@ -94,8 +94,10 @@ in
   # Install and configure configuration.
   programs.git = {
     enable = true;
-    userName = "darkkeks";
-    userEmail = "v.boben@yandex.ru";
+    settings.user = {
+      name = "darkkeks";
+      email = "v.boben@yandex.ru";
+    };
   };
 
   # Install and configure tmux.

@@ -30,6 +30,9 @@
   # $ darwin-rebuild changelog
   system.stateVersion = 4;
 
+  # User that system settings are applied to.
+  system.primaryUser = username;
+
   # Some System Settings that can be configured automatically.
   system.defaults = {
     NSGlobalDomain.ApplePressAndHoldEnabled = false;
