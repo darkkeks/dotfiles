@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""claude-wt-hook - WorktreeCreate/WorktreeRemove hooks backed by arc-wt.
+
+Claude Code's EnterWorktree only knows how to make git worktrees. Outside a git
+repo it delegates to these hooks instead, which is how it learns about arc:
+`create` makes a worktree through ~/bin/wt-helper (so it gets the same
+auto-naming and aisuite setup as an interactive `wt <name>`) and prints the
+project directory to land in; `remove` takes it away again.
+
+Contract with Claude Code:
+  - the hook payload arrives as JSON on stdin
+  - `create` must print the worktree path, and nothing else, on stdout
+  - everything else belongs on stderr, which is what gets shown on failure
+
+Wired up in ~/.claude/settings.json under hooks.WorktreeCreate / .WorktreeRemove.
+"""
+
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+HOME = Path.home()
+ARC_WT_BIN = os.environ.get("WT_BIN") or str(HOME / "bin" / "wt")
+WT_HELPER = os.environ.get("WT_HELPER") or str(HOME / "bin" / "wt-helper")
+
+# Project to land in, when the worktree root itself is not the interesting part.
+DEFAULT_SUBDIR = "dikidi"
+
+# Claude Code has moved this field around between releases; take the first hit.
+NAME_KEYS = ("worktree_name", "worktreeName", "requested_name", "requestedName", "name")
+PATH_KEYS = ("worktree_path", "worktreePath", "path", "cwd")
+
+NAME_RE = re.compile(r"[^a-zA-Z0-9._-]+")
+
+
+def die(message, code=1):
+    print(f"claude-wt-hook: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def info(message):
+    print(f"claude-wt-hook: {message}", file=sys.stderr)
+
+
+def payload():
+    """The hook input, or an empty dict when we were run by hand."""
+    if sys.stdin.isatty():
+        return {}
+    raw = sys.stdin.read()
+    if not raw.strip():
+        return {}
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        info(f"could not parse hook payload, ignoring it: {raw[:200]!r}")
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def first(data, keys):
+    for key in keys:
+        value = data.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def clean_name(name):
+    """arc branch names are ours to choose, but keep them boring."""
+    name = NAME_RE.sub("-", name).strip("-.")
+    return name[:40] or None
+
+
+def parse_porcelain(text):
+    """`wt list --porcelain`: blank-line separated `key value` blocks."""
+    out, block = [], {}
+    for line in text.splitlines() + [""]:
+        if not line.strip():
+            if block.get("worktree"):
+                out.append({
+                    "name": block.get("name", ""),
+                    "branch": block.get("branch", ""),
+                    "path": block["worktree"],
+                })
+            block = {}
+            continue
+        key, _, value = line.strip().partition(" ")
+        block.setdefault(key, value.strip())
+    return out
+
+
+def entries():
+    """Worktrees as arc-wt sees them: name, branch, path.
+
+    Newer arc-wt prints a padded table with ~-abbreviated paths, which is only
+    good enough to look at; --porcelain keeps the paths absolute. Fall back to
+    the old tab-separated columns for arc-wt without that flag.
+    """
+    result = subprocess.run(
+        [ARC_WT_BIN, "list", "--porcelain"], text=True, capture_output=True, check=False
+    )
+    if result.returncode == 0:
+        return parse_porcelain(result.stdout)
+
+    result = subprocess.run(
+        [ARC_WT_BIN, "list"], text=True, capture_output=True, check=False
+    )
+    if result.returncode != 0:
+        die(f"`wt list` failed:\n{result.stderr.strip()}")
+    out = []
+    for line in result.stdout.splitlines():
+        fields = line.split("\t")
+        if len(fields) >= 4:
+            out.append({"name": fields[0], "branch": fields[2], "path": fields[3]})
+    return out
+
+
+def owning_entry(path):
+    """The worktree a path lives in — the project dir is a level below the root."""
+    path = Path(path).resolve()
+    for entry in entries():
+        root = Path(entry["path"]).resolve()
+        if path == root or root in path.parents:
+            return entry
+    return None
+
+
+def cmd_create(data):
+    name = first(data, NAME_KEYS)
+    name = clean_name(name) if name else None
+
+    env = dict(os.environ)
+    # The shell function exports these; a hook gets a bare environment.
+    env.setdefault("WT_SUBDIR", DEFAULT_SUBDIR)
+    env["WT_FZF"] = "0"
+
+    with tempfile.TemporaryDirectory() as tmp:
+        cd_file = Path(tmp) / "cd"
+        env["WT_CD_FILE"] = str(cd_file)
+
+        info(f"creating worktree {name or '(auto-named)'}")
+        result = subprocess.run(
+            [WT_HELPER, "new", *( [name] if name else [] )],
+            env=env,
+            stdin=subprocess.DEVNULL,
+            # wt-helper talks to the user on stdout; stdout is the return channel
+            # here, so everything it says has to go to stderr instead.
+            stdout=sys.stderr,
+            check=False,
+        )
+        if result.returncode != 0:
+            die(f"`wt new` failed with exit code {result.returncode}")
+        if not cd_file.exists():
+            die("`wt new` did not report a directory to land in")
+        target = cd_file.read_text(encoding="utf-8").strip()
+
+    if not target:
+        die("`wt new` reported an empty directory")
+    if not Path(target).is_dir():
+        die(f"`wt new` reported {target}, which is not a directory")
+
+    print(target)
+
+
+def cmd_remove(data):
+    path = first(data, PATH_KEYS)
+    if not path:
+        die(f"no worktree path in the hook payload: {json.dumps(data)[:200]}")
+
+    entry = owning_entry(path)
+    if entry is None:
+        die(f"{path} does not belong to any arc-wt worktree; leaving it alone")
+
+    info(f"removing worktree {entry['name']} ({entry['branch']})")
+    # No --force on purpose: arc-wt refuses to drop a worktree with unpushed
+    # commits or a dirty tree, which is exactly the check we want here.
+    result = subprocess.run([ARC_WT_BIN, "remove", entry["name"]], check=False)
+    if result.returncode != 0:
+        die(f"`wt remove {entry['name']}` failed; the worktree is still there")
+
+
+def main(argv):
+    if not argv or argv[0] not in ("create", "remove"):
+        die("usage: claude-wt-hook {create|remove}  (hook JSON on stdin)", code=2)
+    data = payload()
+    if os.environ.get("CLAUDE_WT_DEBUG"):
+        info(f"payload: {json.dumps(data)}")
+    (cmd_create if argv[0] == "create" else cmd_remove)(data)
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        sys.exit(130)

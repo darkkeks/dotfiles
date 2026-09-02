@@ -40,6 +40,42 @@ function mount-all {
     arc mount -m ~/a/4 -S ~/a/s/4 --object-store /var/lib/arc/object-store
 }
 
+# Worktree workflow. wt-helper does the work and reports where to go via
+# $WT_CD_FILE, because a subprocess cannot cd for us.
+if [[ -x ~/bin/wt-helper ]]; then
+    # Land in this project dir when the current directory gives no hint.
+    export WT_SUBDIR=dikidi
+
+    function wt {
+        local cd_file rc dir prev
+        cd_file=$(mktemp "${TMPDIR:-/tmp}/wt-cd.XXXXXX") || return 1
+        prev=$PWD
+
+        # arc refuses to unmount a worktree this shell is sitting in.
+        case "$1" in rm|remove|prune) cd "$HOME" || return 1 ;; esac
+
+        WT_PWD="$prev" WT_CD_FILE="$cd_file" ~/bin/wt-helper "$@"
+        rc=$?
+        dir=$(< "$cd_file")
+        rm -f "$cd_file"
+        if [[ -n $dir ]]; then
+            cd "$dir"
+        elif [[ $PWD != "$prev" ]]; then
+            cd "$prev" 2>/dev/null || cd "$HOME"
+        fi
+        return $rc
+    }
+
+    function _wt_complete {
+        local names=""
+        [[ -r ~/.arc/arc-wt/state.json ]] &&
+            names=$(jq -r '.entries[].name' ~/.arc/arc-wt/state.json 2>/dev/null)
+        COMPREPLY=($(compgen -W "new pr go cd trunk ls rm add pull prune remount
+            config help $names" -- "${COMP_WORDS[COMP_CWORD]}"))
+    }
+    complete -F _wt_complete wt
+fi
+
 ## SSH
 
 function colored-ssh {

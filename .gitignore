@@ -1,2 +1,5 @@
 # Output of darwin-rebuild build
 nix-darwin/result
+
+# Python bytecode from scripts in macos/bin
+__pycache__/

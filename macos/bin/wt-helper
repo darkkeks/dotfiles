@@ -1,0 +1,943 @@
+#!/usr/bin/env python3
+"""wt-helper - workflow front-end for the `arc-wt` worktree manager.
+
+Driven by the `wt` shell function (see ~/.bashrc_local): the helper does all
+the work and writes the directory the shell should cd into to the file named
+by $WT_CD_FILE. Anything it does not know how to do is forwarded verbatim to
+the real arc-wt binary (~/bin/wt).
+"""
+
+import datetime
+import json
+import os
+import re
+import select
+import shutil
+import subprocess
+import sys
+import termios
+import tty
+from pathlib import Path
+
+HOME = Path.home()
+ARC_WT_BIN = os.environ.get("WT_BIN") or str(HOME / "bin" / "wt")
+MOUNT_POINTS = HOME / ".arc" / "mount-points"
+STATE_CANDIDATES = (
+    HOME / ".arc" / "arc-wt" / "state.json",
+    HOME / ".config" / "arc-wt" / "state.json",
+)
+
+MAX_ROWS = 15
+AISUITE_AGENT = "claude"
+
+
+# --------------------------------------------------------------------------
+# tiny output helpers
+# --------------------------------------------------------------------------
+
+RESET = "\033[0m"
+STYLES = {
+    "dim": "\033[2m",
+    "bold": "\033[1m",
+    "red": "\033[31m",
+    "green": "\033[32m",
+    "yellow": "\033[33m",
+    "blue": "\033[34m",
+    "magenta": "\033[35m",
+    "cyan": "\033[36m",
+    "grey": "\033[90m",
+    "invert": "\033[7m",
+}
+
+
+def paint(text, *styles, force=False):
+    """Wraps text in ANSI styles when the terminal can show them."""
+    if not force and not sys.stdout.isatty():
+        return text
+    return "".join(STYLES[s] for s in styles) + text + RESET
+
+
+ANSI_RE = re.compile(r"\033\[[0-9;]*m")
+
+
+def strip_ansi(text):
+    return ANSI_RE.sub("", text)
+
+
+def ansi_truncate(text, width):
+    """Cuts to `width` visible columns, letting escape sequences through."""
+    out, visible, index = [], 0, 0
+    while index < len(text) and visible < width:
+        match = ANSI_RE.match(text, index)
+        if match:
+            out.append(match.group())
+            index = match.end()
+            continue
+        out.append(text[index])
+        visible += 1
+        index += 1
+    if ANSI_RE.search(text):
+        out.append(RESET)
+    return "".join(out)
+
+
+def die(message, code=1):
+    print(f"wt: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def info(message):
+    print(paint(message, "grey"), file=sys.stderr)
+
+
+# --------------------------------------------------------------------------
+# arc-wt config / state
+# --------------------------------------------------------------------------
+
+
+def usable_cwd(cwd):
+    """Drops a cwd that is not there.
+
+    The trunk in the config may not be mounted yet, and a pruned worktree keeps
+    showing up in state.json for a moment. subprocess would then raise
+    FileNotFoundError naming the *cwd*, which reads like the binary is missing.
+    """
+    return cwd if cwd is not None and Path(cwd).is_dir() else None
+
+
+def spawn(cmd, **kwargs):
+    """subprocess.run, with a readable error when the binary is not there."""
+    try:
+        return subprocess.run([str(c) for c in cmd], **kwargs)
+    except FileNotFoundError:
+        die(f"{cmd[0]}: command not found")
+
+
+def run(cmd, **kwargs):
+    """Runs a command, echoing it first under WT_VERBOSE."""
+    if os.environ.get("WT_VERBOSE"):
+        info("+ " + " ".join(str(c) for c in cmd))
+    if "cwd" in kwargs:
+        kwargs["cwd"] = usable_cwd(kwargs["cwd"])
+    return spawn(cmd, **kwargs)
+
+
+def capture(cmd, cwd=None, check=True):
+    if os.environ.get("WT_VERBOSE"):
+        info("+ " + " ".join(str(c) for c in cmd))
+    result = spawn(
+        cmd,
+        cwd=usable_cwd(cwd),
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if check and result.returncode != 0:
+        die(f"`{' '.join(str(c) for c in cmd)}` failed:\n{result.stderr.strip()}")
+    return result.stdout
+
+
+_config_cache = None
+
+
+def config():
+    """Resolved arc-wt configuration, as reported by `wt config`."""
+    global _config_cache
+    if _config_cache is not None:
+        return _config_cache
+
+    cfg = {}
+    for line in capture([ARC_WT_BIN, "config"]).splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        value = value.strip()
+        if value and value not in {"null", "[]"}:
+            cfg[key.strip()] = value
+    _config_cache = cfg
+    return cfg
+
+
+def config_path(key, default=None):
+    value = config().get(key)
+    if not value:
+        return Path(default).expanduser() if default else None
+    return Path(value).expanduser()
+
+
+def state_file():
+    for path in STATE_CANDIDATES:
+        if path.exists():
+            return path
+    return STATE_CANDIDATES[0]
+
+
+def load_state():
+    path = state_file()
+    if not path.exists():
+        return {"version": 1, "entries": []}
+    with path.open(encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def save_state(state):
+    """Rewrites state.json in the same shape the arc-wt binary writes it."""
+    path = state_file()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as handle:
+        json.dump(state, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    tmp.replace(path)
+
+
+def entries():
+    return load_state().get("entries", [])
+
+
+def usage_file():
+    """Our own file: arc-wt owns state.json and would drop unknown fields."""
+    return state_file().parent / "usage.json"
+
+
+def load_usage():
+    """{resolved worktree path: ISO timestamp of the last `cd` into it}."""
+    path = usage_file()
+    if not path.exists():
+        return {}
+    try:
+        with path.open(encoding="utf-8") as handle:
+            return json.load(handle).get("paths", {})
+    except (OSError, ValueError):
+        return {}
+
+
+def record_usage(path):
+    """Stamps a worktree as just-visited, so the picker can rank by recency."""
+    key = str(Path(path).expanduser().resolve())
+    paths = load_usage()
+    paths[key] = (
+        datetime.datetime.now(datetime.timezone.utc)
+        .strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
+    # Worktrees come and go; do not keep stamps for paths that are gone.
+    paths = {k: v for k, v in paths.items() if Path(k).exists()}
+
+    target = usage_file()
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp = target.with_suffix(target.suffix + ".tmp")
+        with tmp.open("w", encoding="utf-8") as handle:
+            json.dump({"version": 1, "paths": paths}, handle,
+                      indent=2, sort_keys=True)
+            handle.write("\n")
+        tmp.replace(target)
+    except OSError:
+        pass  # ordering is a nicety, never a reason to fail the cd
+
+
+def find_entry(name):
+    for entry in entries():
+        if entry.get("name") == name:
+            return entry
+    return None
+
+
+def find_entry_by_branch(branch):
+    for entry in entries():
+        if entry.get("branch") == branch:
+            return entry
+    return None
+
+
+def patch_entry(name, **fields):
+    state = load_state()
+    for entry in state.get("entries", []):
+        if entry.get("name") == name:
+            entry.update(fields)
+            save_state(state)
+            return entry
+    return None
+
+
+# --------------------------------------------------------------------------
+# paths
+# --------------------------------------------------------------------------
+
+
+def here():
+    """Where the calling shell is.
+
+    Not always our own cwd: for `wt rm` the shell steps out of the worktree
+    first (arc cannot unmount it otherwise) and passes its old cwd in $WT_PWD.
+    """
+    return Path(os.environ.get("WT_PWD") or os.getcwd())
+
+
+def mount_roots():
+    """Every arc mount point known to arc, longest path first."""
+    roots = []
+    if MOUNT_POINTS.exists():
+        text = MOUNT_POINTS.read_text(encoding="utf-8", errors="replace")
+        roots += [Path(m) for m in re.findall(r'Mount:\s*"([^"]+)"', text)]
+    trunk = config_path("trunk_path")
+    if trunk:
+        roots.append(trunk)
+    roots += [Path(e["path"]) for e in entries() if e.get("path")]
+    seen, unique = set(), []
+    for root in roots:
+        key = str(root)
+        if key not in seen:
+            seen.add(key)
+            unique.append(root)
+    return sorted(unique, key=lambda p: len(str(p)), reverse=True)
+
+
+def current_root(cwd=None):
+    """The arc mount the given directory lives in, or None."""
+    cwd = (cwd or here()).resolve()
+    for root in mount_roots():
+        try:
+            resolved = root.resolve()
+        except OSError:
+            continue
+        if cwd == resolved or resolved in cwd.parents:
+            return resolved
+    return None
+
+
+def resolve_cd_target(root):
+    """Keeps you in the same project dir when hopping between worktrees.
+
+    ~/a/1/dikidi -> wt foo -> ~/a/b/foo/dikidi
+    """
+    root = Path(root).expanduser()
+    origin = here().resolve()
+    source = current_root(origin)
+    if source:
+        try:
+            relative = origin.relative_to(source)
+        except ValueError:
+            relative = None
+        if relative and str(relative) != ".":
+            candidate = root / relative
+            if candidate.is_dir():
+                return candidate
+
+    subdir = os.environ.get("WT_SUBDIR")
+    if subdir and (root / subdir).is_dir():
+        return root / subdir
+    return root
+
+
+def emit_cd(path):
+    """Hands the target directory back to the `wt` shell function."""
+    path = str(path)
+    cd_file = os.environ.get("WT_CD_FILE")
+    if cd_file:
+        with open(cd_file, "w", encoding="utf-8") as handle:
+            handle.write(path)
+    else:
+        info(f"(no $WT_CD_FILE; run `cd {path}`)")
+
+
+def aisuite_setup(path):
+    """Generates the agent config (rules, skills, MCP) for a fresh worktree.
+
+    Claude also has a SessionStart hook for this, but there it races the
+    session it is supposed to configure; on a new worktree we can just do it
+    up front, synchronously, and see the errors.
+    """
+    if os.environ.get("WT_AISUITE") == "0":
+        return
+    tool = shutil.which("ya-tool")
+    cmd = [tool, "aisuite"] if tool else ["ya", "tool", "aisuite"]
+    info(f"aisuite: configuring {AISUITE_AGENT} in {path}")
+    if run([*cmd, "--agent", AISUITE_AGENT, str(path)]).returncode != 0:
+        info("aisuite: setup failed, continuing anyway")
+
+
+def go(root, setup=False):
+    """cd into a worktree root, optionally configuring the agent first."""
+    target = resolve_cd_target(root)
+    # Only for a real project dir: with no subdir to land in, target is the
+    # arcadia root itself, which is not something to set an agent up for.
+    if setup and target != Path(root).expanduser():
+        aisuite_setup(target)
+    record_usage(root)
+    emit_cd(target)
+
+
+# --------------------------------------------------------------------------
+# arc helpers
+# --------------------------------------------------------------------------
+
+
+def arc_branch(cwd):
+    for line in capture(["arc", "info"], cwd=cwd, check=False).splitlines():
+        key, _, value = line.partition(":")
+        if key.strip() == "branch":
+            return value.strip()
+    return None
+
+
+def repo_cwd():
+    """A directory inside an arc repo, for commands that need repo context."""
+    return current_root() or config_path("trunk_path", HOME / "arcadia")
+
+
+# --------------------------------------------------------------------------
+# interactive picker
+# --------------------------------------------------------------------------
+
+
+class Item:
+    def __init__(self, display, search, value):
+        self.display = display
+        self.search = search.lower()
+        self.value = value
+
+
+def _read_key(stream):
+    """Reads one keypress, decoding escape sequences and UTF-8 input."""
+    first = stream.read(1)
+    if not first:
+        return None
+    byte = first[0]
+
+    if byte == 0x1B:
+        # Escape alone vs. the start of a CSI sequence.
+        if not select.select([stream], [], [], 0.03)[0]:
+            return "ESC"
+        seq = stream.read(1)
+        if seq != b"[" and seq != b"O":
+            return "ESC"
+        body = b""
+        while True:
+            char = stream.read(1)
+            if not char:
+                break
+            body += char
+            if char.isalpha() or char == b"~":
+                break
+        return {
+            b"A": "UP",
+            b"B": "DOWN",
+            b"C": "RIGHT",
+            b"D": "LEFT",
+            b"H": "HOME",
+            b"F": "END",
+            b"5~": "PGUP",
+            b"6~": "PGDN",
+        }.get(body, "UNKNOWN")
+
+    if byte in (0x0D, 0x0A):
+        return "ENTER"
+    if byte in (0x7F, 0x08):
+        return "BACKSPACE"
+    if byte == 0x03:
+        return "ABORT"
+    if byte == 0x04:
+        return "ABORT"
+    if byte == 0x10:
+        return "UP"
+    if byte == 0x0E:
+        return "DOWN"
+    if byte == 0x15:
+        return "CLEAR"
+    if byte == 0x17:
+        return "WORD"
+    if byte < 0x20:
+        return "UNKNOWN"
+
+    # UTF-8: pull the continuation bytes so Cyrillic queries work.
+    extra = 0
+    if byte >= 0xF0:
+        extra = 3
+    elif byte >= 0xE0:
+        extra = 2
+    elif byte >= 0xC0:
+        extra = 1
+    raw = first + (stream.read(extra) if extra else b"")
+    return ("CHAR", raw.decode("utf-8", errors="replace"))
+
+
+def pick(items, header="", query="", prompt="> "):
+    """fzf-style picker on /dev/tty. Returns the chosen value or None."""
+    if not items:
+        return None
+
+    fzf = shutil.which("fzf")
+    if fzf and os.environ.get("WT_FZF") != "0":
+        return _pick_fzf(fzf, items, header, query)
+
+    try:
+        tty_in = open("/dev/tty", "rb", buffering=0)
+        tty_out = open("/dev/tty", "w", encoding="utf-8")
+    except OSError:
+        die("no terminal available for interactive selection")
+
+    fd = tty_in.fileno()
+    saved = termios.tcgetattr(fd)
+    cursor, offset, drawn = 0, 0, 0
+    width = shutil.get_terminal_size((100, 24)).columns
+    rows = max(3, min(MAX_ROWS, shutil.get_terminal_size((100, 24)).lines - 4))
+
+    def matching():
+        if not query:
+            return items
+        needles = query.lower().split()
+        return [i for i in items if all(n in i.search for n in needles)]
+
+    def render():
+        nonlocal drawn
+        shown = matching()
+        lines = []
+        if header:
+            lines.append(paint(header[:width], "grey", force=True))
+        counter = paint(f"  {len(shown)}/{len(items)}", "grey", force=True)
+        lines.append(paint(prompt, "cyan", force=True) + query + counter)
+        avail = max(10, width - 3)
+        for index in range(offset, min(offset + rows, len(shown))):
+            if index == cursor:
+                # Inner colours would cancel the highlight, so drop them.
+                plain = strip_ansi(shown[index].display)[:avail]
+                lines.append(paint("▸ " + plain.ljust(avail), "invert", force=True))
+            else:
+                lines.append("  " + ansi_truncate(shown[index].display, avail))
+        buf = []
+        if drawn:
+            buf.append(f"\033[{drawn}A")
+        buf.append("\r")
+        for line in lines:
+            buf.append("\033[2K" + line + "\r\n")
+        buf.append("\033[0J")
+        drawn = len(lines)
+        tty_out.write("".join(buf))
+        tty_out.flush()
+
+    def clamp():
+        nonlocal cursor, offset
+        shown = matching()
+        cursor = max(0, min(cursor, len(shown) - 1))
+        offset = min(offset, cursor)
+        offset = max(offset, cursor - rows + 1)
+        offset = max(0, min(offset, max(0, len(shown) - rows)))
+
+    try:
+        tty.setraw(fd)
+        tty_out.write("\033[?25l")
+        render()
+        while True:
+            key = _read_key(tty_in)
+            if key is None or key in ("ABORT", "ESC"):
+                return None
+            if key == "ENTER":
+                shown = matching()
+                return shown[cursor].value if shown else None
+            if key == "UP":
+                cursor -= 1
+            elif key == "DOWN":
+                cursor += 1
+            elif key == "PGUP":
+                cursor -= rows
+            elif key == "PGDN":
+                cursor += rows
+            elif key == "HOME":
+                cursor = 0
+            elif key == "END":
+                cursor = len(matching()) - 1
+            elif key == "BACKSPACE":
+                query, cursor = query[:-1], 0
+            elif key == "CLEAR":
+                query, cursor = "", 0
+            elif key == "WORD":
+                query, cursor = query.rstrip().rpartition(" ")[0], 0
+            elif isinstance(key, tuple):
+                query, cursor = query + key[1], 0
+            clamp()
+            render()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+        if drawn:
+            tty_out.write(f"\033[{drawn}A\033[0J")
+        tty_out.write("\033[?25h")
+        tty_out.flush()
+        tty_in.close()
+        tty_out.close()
+
+
+def _pick_fzf(fzf, items, header, query):
+    lines = [f"{i}\t{item.display}" for i, item in enumerate(items)]
+    cmd = [fzf, "--ansi", "--with-nth=2..", "--delimiter=\t", "--height=40%", "--reverse"]
+    if header:
+        cmd += ["--header", header]
+    if query:
+        cmd += ["--query", query]
+    result = subprocess.run(
+        cmd, input="\n".join(lines), text=True, stdout=subprocess.PIPE
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    return items[int(result.stdout.split("\t", 1)[0])].value
+
+
+# --------------------------------------------------------------------------
+# commands
+# --------------------------------------------------------------------------
+
+
+def next_free_name():
+    """First unused w1, w2, w3, ... slot."""
+    taken = {e.get("name") for e in entries()}
+    base = config_path("worktrees_base_path", HOME / "arcadia-wt")
+    index = 1
+    while f"w{index}" in taken or (base / f"w{index}").exists():
+        index += 1
+    return f"w{index}"
+
+
+def create_worktree(name, branch=None, path=None, base=None, extra=()):
+    """Runs `arc-wt add` and returns the state entry it created."""
+    branch = branch or name
+    cmd = [ARC_WT_BIN, "add", branch, "--name", name]
+    if path:
+        cmd += ["--path", str(path)]
+    if base:
+        cmd += ["--base", base]
+    cmd += list(extra)
+    if run(cmd).returncode != 0:
+        die(f"failed to create worktree {name}")
+    entry = find_entry(name)
+    if not entry:
+        die(f"worktree {name} was created but is missing from the state file")
+    return entry
+
+
+def cmd_new(args):
+    """wt new [name] - create a worktree (auto-named if omitted) and cd in."""
+    # `arc-wt add` flags that take a value, so we do not mistake it for a name.
+    value_flags = {"--mode", "--repo", "--path", "--store-path",
+                   "--object-store-path"}
+    name, base, extra = None, None, []
+    rest = list(args)
+    while rest:
+        arg = rest.pop(0)
+        if arg in ("--base", "-b"):
+            base = rest.pop(0) if rest else die("--base needs a value")
+        elif arg == "--name":
+            name = rest.pop(0) if rest else die("--name needs a value")
+        elif arg.startswith("-"):
+            extra.append(arg)
+            if arg in value_flags:
+                extra.append(rest.pop(0) if rest else die(f"{arg} needs a value"))
+        elif name is None:
+            name = arg
+        else:
+            die(f"unexpected argument: {arg}")
+
+    if name:
+        existing = find_entry(name) or find_entry_by_branch(name)
+        if existing:
+            info(f"worktree {existing['name']} already exists")
+            return go(existing["path"])
+    else:
+        name = next_free_name()
+
+    entry = create_worktree(name, base=base, extra=extra)
+    print(paint(f"{entry['name']}  {entry['branch']}  {entry['path']}", "green"))
+    go(entry["path"], setup=True)
+
+
+def cmd_go(args):
+    """wt go [name] - cd into an existing worktree, picking one if omitted."""
+    trunk = config_path("trunk_path", HOME / "arcadia")
+
+    if args:
+        name = args[0]
+        if name == "trunk":
+            return go(trunk)
+        entry = find_entry(name) or find_entry_by_branch(name)
+        if not entry:
+            die(f"unknown worktree: {name}")
+        return go(entry["path"])
+
+    at = current_root()
+    usage = load_usage()
+    known = entries()
+
+    def rank(path, fallback):
+        """Most recently visited first; never visited fall back to newest."""
+        stamp = usage.get(str(Path(path).expanduser().resolve()))
+        return (stamp or fallback, 1 if stamp else 0)
+
+    # Unvisited trunk sorts above every unvisited worktree, but still below
+    # anything you have actually been in.
+    newest = max((e.get("created_at", "") for e in known), default="")
+    rows = [(rank(trunk, newest), "trunk", None)]
+    rows += [(rank(e["path"], e.get("created_at", "")), e["name"], e) for e in known]
+    rows.sort(key=lambda row: row[0], reverse=True)
+
+    items = []
+    for _, name, entry in rows:
+        path = str(trunk) if entry is None else entry["path"]
+        branch = (arc_branch(trunk) or "?") if entry is None else entry.get("branch", "")
+        marker = "● " if at and str(at) == str(Path(path).resolve()) else "  "
+        display = (
+            marker
+            + paint(f"{name:<20}", "bold", force=True)
+            + paint(f"{branch:<28}", "cyan", force=True)
+            + paint(path, "grey", force=True)
+        )
+        items.append(Item(display, f"{name} {branch}", entry or "trunk"))
+
+    chosen = pick(items, header="worktrees - most recent first, type to filter, enter to cd")
+    if chosen is None:
+        return
+    if chosen == "trunk":
+        go(trunk)
+    else:
+        go(chosen["path"])
+
+
+PR_STATUS_STYLE = {
+    "draft": "grey",
+    "open": "green",
+    "conflicts": "red",
+    "uploading": "blue",
+    "merged": "magenta",
+    "discarded": "grey",
+}
+
+
+def cmd_pr(args):
+    """wt pr [id|query] [arc-pr-list-flags] - check a PR out into a worktree."""
+    list_args, query, pr_id = [], [], None
+    rest = list(args)
+    while rest:
+        arg = rest.pop(0)
+        if arg.startswith("-"):
+            list_args.append(arg)
+            # arc pr list flags that take a value
+            if arg in ("-A", "--author", "-R", "--reviewer", "-S", "--status",
+                       "--ticket", "--label", "-l", "--limit", "--owner",
+                       "--subscriber", "--shipper", "--sort", "--as") and rest:
+                list_args.append(rest.pop(0))
+        elif arg.isdigit():
+            pr_id = int(arg)
+        else:
+            query.append(arg)
+
+    if pr_id is None:
+        if not any(a in ("-i", "-o", "--all", "--in", "--out") for a in list_args):
+            list_args.insert(0, "-o")
+        raw = capture(["arc", "pr", "list", "--json", *list_args], cwd=repo_cwd())
+        prs = [json.loads(line) for line in raw.splitlines() if line.strip()]
+        if not prs:
+            die("no pull requests matched")
+
+        known = {e.get("name") for e in entries()}
+        items = []
+        for pr in prs:
+            name = f"pr-{pr['id']}"
+            marker = "● " if name in known else "  "
+            status = pr.get("status", "")
+            items.append(
+                Item(
+                    marker
+                    + paint(str(pr["id"]), "cyan", force=True)
+                    + "  "
+                    + paint(f"{status:<11}", PR_STATUS_STYLE.get(status, "yellow"), force=True)
+                    + " "
+                    + pr.get("summary", ""),
+                    f"{pr['id']} {status} {pr.get('summary', '')} {pr.get('author', '')}",
+                    pr,
+                )
+            )
+        chosen = pick(
+            items,
+            header="pull requests - ● already has a worktree, enter to check out",
+            query=" ".join(query),
+        )
+        if chosen is None:
+            return
+        pr_id = chosen["id"]
+        summary = chosen.get("summary", "")
+    else:
+        summary = ""
+
+    name = f"pr-{pr_id}"
+    branch = name
+    entry = find_entry(name)
+
+    if entry and Path(entry["path"]).exists():
+        if arc_branch(entry["path"]) != branch:
+            if run(["arc", "pr", "checkout", str(pr_id)], cwd=entry["path"]).returncode != 0:
+                die(f"failed to check out PR {pr_id} in {entry['path']}")
+        info(f"reusing worktree {name}")
+        return go(entry["path"])
+
+    if entry:
+        die(f"state has worktree {name} but {entry['path']} is gone; "
+            f"run `wt remove {name}` first")
+
+    # Do not pre-create `pr-<id>`: arc pr checkout wants to create that branch
+    # itself and falls back to an ugly submit-* name if it already exists.
+    scratch = f"wt-base-{pr_id}"
+    base_path = config_path("worktrees_base_path", HOME / "arcadia-wt")
+    entry = create_worktree(name, branch=scratch, path=base_path / name)
+
+    if run(["arc", "pr", "checkout", str(pr_id)], cwd=entry["path"]).returncode != 0:
+        die(f"worktree created at {entry['path']} but `arc pr checkout {pr_id}` failed")
+    run(["arc", "branch", "-D", scratch], cwd=entry["path"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    patch_entry(name, branch=branch)
+
+    print(paint(f"{name}  {summary}".rstrip(), "green"))
+    go(entry["path"], setup=True)
+
+
+def cmd_list(args):
+    """wt ls - show worktrees, marking the one you are in."""
+    at = current_root()
+    trunk = config_path("trunk_path", HOME / "arcadia")
+    rows = [("trunk", arc_branch(trunk) or "?", str(trunk))]
+    rows += [(e["name"], e.get("branch", ""), e["path"]) for e in entries()]
+    width = max((len(r[0]) for r in rows), default=4)
+    branch_width = max((len(r[1]) for r in rows), default=6)
+    for name, branch, path in rows:
+        current = at and str(at) == str(Path(path).resolve())
+        marker = paint("●", "green") if current else " "
+        print(
+            f"{marker} {paint(name.ljust(width), 'bold')}  "
+            f"{paint(branch.ljust(branch_width), 'cyan')}  {paint(path, 'grey')}"
+        )
+
+
+def cmd_remove(args):
+    """wt rm [name] - remove a worktree, picking one if omitted."""
+    force = [a for a in args if a.startswith("-")]
+    names = [a for a in args if not a.startswith("-")]
+
+    if not names:
+        items = [
+            Item(
+                paint(f"{e['name']:<20}", "bold", force=True)
+                + paint(f"{e.get('branch', ''):<28}", "cyan", force=True)
+                + paint(e["path"], "grey", force=True),
+                f"{e['name']} {e.get('branch', '')}",
+                e["name"],
+            )
+            for e in entries()
+        ]
+        if not items:
+            die("no worktrees to remove")
+        chosen = pick(items, header="remove worktree - enter to confirm, esc to cancel")
+        if chosen is None:
+            return
+        names = [chosen]
+
+    origin = here().resolve()
+    leaving = False
+    for name in names:
+        entry = find_entry(name)
+        if entry:
+            path = Path(entry["path"]).resolve()
+            if origin == path or path in origin.parents:
+                leaving = True
+        if run([ARC_WT_BIN, "remove", name, *force]).returncode != 0:
+            die(f"failed to remove {name}")
+
+    if leaving:
+        trunk = config_path("trunk_path", HOME / "arcadia")
+        go(trunk)
+
+
+def cmd_prune(args):
+    """wt prune - drop merged worktrees, escaping to trunk if ours goes."""
+    origin = here()
+    code = run([ARC_WT_BIN, "prune", *args]).returncode
+    if not origin.exists():
+        trunk = config_path("trunk_path", HOME / "arcadia")
+        go(trunk)
+    raise SystemExit(code)
+
+
+def cmd_help(args):
+    print(
+        f"""{paint('wt', 'bold')} - arc worktree workflow
+
+  {paint('wt', 'cyan')}                    create a worktree (auto-named w1, w2, ...) and cd into it
+  {paint('wt <name>', 'cyan')}             cd into worktree <name>, creating it if needed
+  {paint('wt pr [id|query]', 'cyan')}      pick a pull request, check it out into a worktree, cd in
+  {paint('wt go [name]', 'cyan')}          cd into an existing worktree (picker, most recent first)
+  {paint('wt trunk', 'cyan')}              cd into the trunk checkout
+  {paint('wt ls', 'cyan')}                 list worktrees
+  {paint('wt rm [name]', 'cyan')}          remove a worktree (picker when no name)
+
+  Anything else is forwarded to {ARC_WT_BIN}:
+  {paint('wt add / pull / prune / remount / config', 'cyan')}
+  (prune also walks you back to trunk if it removes the one you are in)
+
+  In the picker: type to filter, up/down to move, enter to select, esc to cancel.
+  Uses fzf when installed.
+
+  A freshly created worktree gets its agent config generated on the spot with
+  `ya-tool aisuite --agent {AISUITE_AGENT}`, before you land in it.
+
+{paint('Environment', 'bold')}
+  WT_SUBDIR     project dir to land in (e.g. dikidi) when the current
+                directory gives no hint
+  WT_AISUITE    set to 0 to skip the aisuite setup on worktree creation
+  WT_FZF        set to 0 to always use the built-in picker
+  WT_VERBOSE    echo the commands being run
+"""
+    )
+
+
+PASSTHROUGH = {"add", "pull", "remount", "config", "--version"}
+COMMANDS = {
+    "new": cmd_new,
+    "n": cmd_new,
+    "pr": cmd_pr,
+    "prune": cmd_prune,
+    "go": cmd_go,
+    "cd": cmd_go,
+    "ls": cmd_list,
+    "list": cmd_list,
+    "rm": cmd_remove,
+    "remove": cmd_remove,
+    "help": cmd_help,
+    "-h": cmd_help,
+    "--help": cmd_help,
+}
+
+
+def main(argv):
+    if not argv:
+        return cmd_new([])
+
+    command, args = argv[0], argv[1:]
+
+    if command == "trunk" and not args:
+        return cmd_go(["trunk"])
+    if command in COMMANDS:
+        return COMMANDS[command](args)
+    if command in PASSTHROUGH:
+        raise SystemExit(run([ARC_WT_BIN, command, *args]).returncode)
+
+    # `wt <name>`: go there, or make it.
+    if not command.startswith("-"):
+        return cmd_new([command, *args])
+
+    raise SystemExit(run([ARC_WT_BIN, command, *args]).returncode)
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        print(file=sys.stderr)
+        sys.exit(130)
