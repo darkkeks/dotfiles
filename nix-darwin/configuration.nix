@@ -106,31 +106,71 @@
     };
     taps = [
       "darkkeks/xkbswitch"
+      "pg83/tap"
     ];
     brews = [
       "darkkeks/xkbswitch/libxkbswitch"
       "darkkeks/xkbswitch/xkbswitch"
+      "mas"
+      "pg83/tap/shitty"
+      "pkgconf"
+      "skopeo"
     ];
     casks = [
       "1password"
+      "android-commandlinetools"
+      "android-studio"
+      "claude"
+      "cutter"
+      "db-browser-for-sqlite"
       "discord"
       "firefox"
       "garmin-express"
+      "insta360-studio"
       "intellij-idea"
+      "intellij-idea-ce"
       "iterm2"
       "keymapp"
       "macfuse"
+      "macrorecorder"
+      "mitmproxy"
       "notion"
+      "nvidia-geforce-now"
       "obs"
       "pinta"
+      "proxyman"
       "spotify"
       "steam"
+      "t3-code"
       "telegram-desktop"
+      "virtualbox"
       "visual-studio-code"
-      "wireshark"
+      # Renamed from plain "wireshark", which brew still lists because the old
+      # Caskroom entry with the ChmodBPF installers was left behind.
+      "wireshark-app"
+      "yandex-disk"
+      "zwift"
     ];
     masApps = {
+      GarageBand = 682658836;
+      Keynote = 409183694;
       Magnet = 441258766;
+      Numbers = 409203825;
+      Pages = 409201541;
+      Tailscale = 1475387142;
+      "Windows App" = 1295203466;
+      Xcode = 497799835;
+      iMovie = 408981434;
     };
+
+    # These are installed by hand from a .dmg even though a cask exists. Listing
+    # them here would break activation, since brew refuses to install a cask over
+    # an app it does not own. Hand them over first, then move them up:
+    #
+    #   brew install --cask --adopt coq-platform dolphin logitech-g-hub \
+    #       minecraft modrinth tunnelblick zoom
+    #
+    # No cask at all, so these stay manual: IDA Free, TeamViewer QS,
+    # boringNotch, friture, VoceVista Video.
   };
 }
