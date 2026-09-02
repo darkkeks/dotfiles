@@ -69,6 +69,9 @@
           {
             home-manager.useGlobalPkgs = true;
             # home-manager.useUserPackages = true;
+            # Move a file aside instead of aborting activation when one is
+            # taken over that already existed in $HOME.
+            home-manager.backupFileExtension = "hm-backup";
             home-manager.users.${username} = import ./nix-darwin/home.nix;
             home-manager.extraSpecialArgs = { inherit inputs username; };
             home-manager.sharedModules = [
