@@ -224,4 +224,3 @@ require("lazy").setup({
     },
   },
 })
-
