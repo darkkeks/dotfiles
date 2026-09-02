@@ -3,15 +3,48 @@
 set -e
 
 PATH_CACHE="$HOME/.ya/tool-paths.json"
-if [[ ! -f "$PATH_CACHE" ]]; then
-    mkdir -p $(dirname "$PATH_CACHE")
+
+# jq keeps the lookup cheap, python3 covers boxes that have no jq, and with
+# neither we skip the cache instead of dying: a dozen aliases go through this
+# wrapper, so it must never be the thing that breaks.
+if command -v jq >/dev/null 2>&1; then
+    CACHE_WITH=jq
+elif command -v python3 >/dev/null 2>&1; then
+    CACHE_WITH=python3
+else
+    CACHE_WITH=none
+fi
+
+if [[ "$CACHE_WITH" != none && ! -f "$PATH_CACHE" ]]; then
+    mkdir -p "$(dirname "$PATH_CACHE")"
     echo '{}' > "$PATH_CACHE"
 fi
+
+function cache-read {
+    case "$CACHE_WITH" in
+        jq) jq -r ".[\"$1\"] // empty" "$PATH_CACHE" 2>/dev/null ;;
+        python3) python3 -c 'import json, sys
+try:
+    print(json.load(open(sys.argv[1])).get(sys.argv[2]) or "")
+except Exception:
+    print("")' "$PATH_CACHE" "$1" ;;
+    esac
+}
 
 function cache-write {
     key="$1"; value="$2"
     f=$(mktemp)
-    jq ". + {\"$key\":\"$value\"}" "$PATH_CACHE" >"$f"
+    case "$CACHE_WITH" in
+        jq) jq ". + {\"$key\":\"$value\"}" "$PATH_CACHE" >"$f" ;;
+        python3) python3 -c 'import json, sys
+try:
+    data = json.load(open(sys.argv[1]))
+except Exception:
+    data = {}
+data[sys.argv[2]] = sys.argv[3]
+json.dump(data, open(sys.argv[4], "w"))' "$PATH_CACHE" "$key" "$value" "$f" ;;
+        *) rm -f "$f"; return 0 ;;
+    esac
     mv "$f" "$PATH_CACHE"
 }
 
@@ -25,7 +58,7 @@ elif [[ "$1" = "--force-update" ]]; then
     exec ya tool "$tool" --force-update "$@"
 fi
 
-path=$(jq -r ".[\"$tool\"]" $PATH_CACHE)
+path=$(cache-read "$tool" || true)
 if [[ "$path" = "null" || "$path" = "" ]]; then
     if path=$(ya tool --print-path $tool 2>/dev/null); then
         cache-write "$tool" "$path"

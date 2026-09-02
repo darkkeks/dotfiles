@@ -36,7 +36,7 @@ function select_prev_ya() {
 }
 
 function add_stage_start_to_environ () {
-    YA_EVENT_STAMP="$1@$(date +%s.%N)"
+    YA_EVENT_STAMP="$1@$(date +%s)"
     export YA_STAGES=${YA_STAGES}${YA_STAGES:+:}${YA_EVENT_STAMP}
     unset YA_EVENT_STAMP
 }
