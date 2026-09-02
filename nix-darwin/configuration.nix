@@ -63,6 +63,10 @@
     touchIdAuth = true;
   };
 
+  security.pki.certificateFiles = [
+    ./../certs/YandexInternalCA.pem
+  ];
+
   age = {
     identityPaths = [ "/Users/darkkeks/.ssh/id_ed25519" ];
     secrets = {

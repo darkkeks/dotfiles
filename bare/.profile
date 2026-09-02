@@ -8,3 +8,6 @@ if [ -n "$BASH_VERSION" ]; then
         . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
     fi
 fi
+
+# Managed by adv/frontend/scripts/install-internal-root-ca.sh
+export NODE_EXTRA_CA_CERTS="$HOME/.ssl/certs/YandexInternalRootCA.pem"
