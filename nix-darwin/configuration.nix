@@ -80,6 +80,7 @@
     allowUnfreePredicate =
       pkg:
       builtins.elem (lib.getName pkg) [
+        "claude-code"
         "google-chrome"
         "raycast"
         "spotify"

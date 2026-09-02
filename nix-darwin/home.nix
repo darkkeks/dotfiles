@@ -59,6 +59,9 @@ in
     ncdu
     uv
     nh
+    mariadb
+    claude-code
+    ansible
 
     # Use maven with jdk8.
     (pkgs.maven.override { jdk_headless = jdk.jdk8; })
@@ -83,7 +86,7 @@ in
       (ppkgs.callPackage ./yandex-tracker-client.nix { })
     ]))
 
-    yourkit
+    # yourkit
   ];
 
   home.sessionVariables = { };
