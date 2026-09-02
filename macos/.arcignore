@@ -1,0 +1,23 @@
+
+# added automatically by ya tool
+dikidi/.claude/rules/generated/
+
+dikidi/.mcp.json
+
+dikidi/.claude/settings.local.json
+dikidi/.claude/aisuite_generated_artifacts.json
+
+dikidi/.aisuite/managed_artifacts.json
+
+dikidi/.aisuite/setup.lock
+
+dikidi/.cursor
+dikidi/.codeassistant
+dikidi/.opencode
+dikidi/opencode.json
+dikidi/opencode.jsonc
+dikidi/.codex
+dikidi/.agents/
+
+dikidi/.aisuite/setup_log.jsonl
+dikidi/.aisuite/setup_state.json

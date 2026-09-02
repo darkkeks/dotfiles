@@ -1,0 +1,42 @@
+{
+  "git.autofetch": true,
+  "workbench.editorAssociations": {
+    "*.ipynb": "jupyter-notebook",
+    "**/.arc/sequencer/todo": "arcanum.interactiveRebaseEditor",
+    "**/.arc/sequencer/arc-rebase-todo": "arcanum.interactiveRebaseEditor"
+  },
+  "git.confirmSync": false,
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "editor.unicodeHighlight.allowedLocales": {
+    "ru": true
+  },
+  "cmake.pinnedCommands": [
+    "workbench.action.tasks.configureTaskRunner",
+    "workbench.action.tasks.runTask"
+  ],
+  "roo-cline.allowedCommands": [
+    "npm test",
+    "npm install",
+    "tsc",
+    "git log",
+    "git diff",
+    "git show"
+  ],
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "[jsonc]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "window.autoDetectColorScheme": true,
+  "vsrocq.path": "/Applications/Coq-Platform~8.20~2025.01.app/Contents/Resources/bin/vscoqtop",
+  "json.schemaDownload.trustedDomains": {
+    "https://schemastore.azurewebsites.net/": true,
+    "https://raw.githubusercontent.com/": true,
+    "https://www.schemastore.org/": true,
+    "https://json.schemastore.org/": true,
+    "https://json-schema.org/": true,
+    "https://biomejs.dev": true
+  },
+}
