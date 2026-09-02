@@ -11,6 +11,15 @@ export INFOPATH="/opt/homebrew/share/info:${INFOPATH:-}";
 
 # Add yc to PATH
 [[ -d ~/yandex-cloud/bin ]] && PATH="$HOME/yandex-cloud/bin:$PATH"
+if [ -f ~/ycp/path.bash.inc ]; then source ~/ycp/path.bash.inc; fi
+if [ -f ~/ycp/completion.bash.inc ]; then source ~/ycp/completion.bash.inc; fi
+
+# # The next line updates PATH for Yandex Cloud Private CLI.
+# if [ -f '/Users/darkkeks/ycp/path.bash.inc' ]; then source '/Users/darkkeks/ycp/path.bash.inc'; fi
+# 
+# # The next line enables shell command completion for ycp.
+# if [ -f '/Users/darkkeks/ycp/completion.bash.inc' ]; then source '/Users/darkkeks/ycp/completion.bash.inc'; fi
+
 
 ## ARC
 
