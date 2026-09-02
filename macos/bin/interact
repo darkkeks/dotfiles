@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+SILENT=
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -s|--silent)
+      SILENT=1
+      shift;;
+    *)
+      break
+  esac
+done
+
+FIRST=()
+SECOND=()
+
+second=
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -s|--silent)
+      silent=1
+      shift;;
+    --)
+      non_options=1
+      second=1
+      shift;;
+    *)
+      non_options=1
+      test $second && SECOND+=("$1") || FIRST+=("$1")
+      shift;;
+  esac
+done
+
+if test ${#FIRST[@]} -eq 0 || test ${#SECOND[@]} -eq 0; then
+  echo "Usage: $0 <cmd1> [args...] -- <cmd2> [args...]"
+  exit 1
+fi
+
+# Fixes some macos/clang weirdness that produces warnings when running under asan:
+# > solution(35547,0x1e3015ec0) malloc: nano zone abandoned due to inability to reserve vm space.
+export MallocNanoZone=0
+
+FIFO=io
+trap "rm -f $FIFO" EXIT
+mkfifo $FIFO
+
+if test $SILENT; then
+  "${FIRST[@]}" <$FIFO | "${SECOND[@]}" >$FIFO 
+else
+  "${FIRST[@]}" <$FIFO \
+    | tee >(awk '{print "< " $0}' > /dev/stderr) \
+    | "${SECOND[@]}" \
+    | tee >(awk '{print "> " $0}' > /dev/stderr) \
+    >$FIFO
+fi

@@ -1,0 +1,206 @@
+#!/usr/bin/env python3
+"""Dump puncher firewall rules for dikidi macroses and domains."""
+
+import json
+import subprocess
+import sys
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Queried as both source and destination
+MACROSES = [
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_PHP_PROD_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_DB_PROD_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_PHP_TEST_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_DB_TEST_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_DEV_NETS_",
+    "_DIKIDI_BACKEND_PROD_NETS_",
+    "_DIKIDI_BACKEND_PRESTABLE_NETS_",
+    "_DIKIDI_BACKEND_TEST_NETS_",
+    "_DIKIDI_BACKEND_DEV_NETS_",
+    "_DIKIDI_FRONTEND_PROD_NETS_",
+    "_DIKIDI_FRONTEND_TEST_NETS_",
+    "_DIKIDI_BALANCER_PROD_NETS_",
+    "_DIKIDI_BALANCER_TEST_NETS_",
+    "_DIKIDI_DB_PROD_NETS_",
+    "_DIKIDI_DB_TEST_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_DATALENS_TEST_NETS_",
+    "_CLOUD_YANDEX_CLIENTS_DIKIDI_DATALENS_PROD_NETS_",
+]
+
+# Queried as destination only
+DOMAINS = [
+    "dikidi.yandex.net",
+    "test.dikidi.yandex.net",
+    "api.dikidi.yandex.net",
+    "api.test.dikidi.yandex.net",
+    "intapi.dikidi.yandex.net",
+    "intapi.test.dikidi.yandex.net",
+    "dev.dikidi.yandex-team.ru",
+    "l3.dikidi.ru",
+    "l3.dikidi.tech",
+    "test.dikidi.ru",
+    "ipv6.dikidi.ru",
+    "ipv6.dikidi.tech",
+    "gitlab.dikidi.yandex.net",
+    "graylog.dikidi.yandex.net",
+]
+
+TARGETS = MACROSES + DOMAINS
+
+
+MATCH_FLAG = {"--source": "--src-match", "--destination": "--dst-match"}
+
+
+def puncher_get(flag: str, value: str, match: str) -> list[dict]:
+    result = subprocess.run(
+        ["/Users/darkkeks/bin/ya-tool", "puncher", "get",
+         flag, value, MATCH_FLAG[flag], match, "--json"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        print(f"[warn] puncher get {flag} {value}: {result.stderr.strip()}", file=sys.stderr)
+        return []
+    rules = []
+    for line in result.stdout.splitlines():
+        if line.strip():
+            try:
+                rules.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    return rules
+
+
+def ports_str(rule: dict) -> str:
+    ports = rule.get("ports") or []
+    return ", ".join(ports) if ports else rule.get("protocol", "tcp")
+
+
+def is_mobile(rule: dict) -> bool:
+    return "mobile" in (rule.get("locations") or [])
+
+
+def until_date(rule: dict) -> str | None:
+    """Expiration date for a temporary rule (None if the rule is permanent)."""
+    until = rule.get("until")
+    if not until:
+        return None
+    # `until` is usually an ISO date/timestamp; keep just the date part.
+    return str(until)[:10]
+
+
+def expiry_flag(dates: set | None) -> str:
+    if not dates:
+        return ""
+    return " (until " + ", ".join(sorted(dates)) + ")"
+
+
+RULE_URL = "https://puncher.yandex-team.ru/?id={}"
+LINK_ICON = "🔗"
+
+
+def links(ids: set | None) -> str:
+    """One clickable icon (OSC 8 hyperlink) per rule."""
+    if not ids:
+        return ""
+    return " " + "".join(
+        f"\033]8;;{RULE_URL.format(i)}\033\\{LINK_ICON}\033]8;;\033\\"
+        for i in sorted(ids)
+    )
+
+
+def fetch_source(macro: str) -> tuple[str, str, list[dict]]:
+    return macro, "->", puncher_get("--source", macro, "exact")
+
+
+def fetch_dest(target: str) -> tuple[str, str, list[dict]]:
+    return target, "<-", puncher_get("--destination", target, "exact")
+
+
+def main():
+    # target -> "->" -> peer -> set of ports
+    # target -> "<-" -> peer -> set of ports
+    out: dict[str, dict[str, dict[str, set]]] = {
+        t: {"->": defaultdict(set), "<-": defaultdict(set)} for t in TARGETS
+    }
+    # peers reachable via a rule with the "mobile" location, per direction
+    mob: dict[str, dict[str, set]] = {
+        t: {"->": set(), "<-": set()} for t in TARGETS
+    }
+    # expiration dates of temporary rules, per peer per direction
+    exp: dict[str, dict[str, dict[str, set]]] = {
+        t: {"->": defaultdict(set), "<-": defaultdict(set)} for t in TARGETS
+    }
+    # ids of the rules a peer comes from, per direction
+    ids: dict[str, dict[str, dict[str, set]]] = {
+        t: {"->": defaultdict(set), "<-": defaultdict(set)} for t in TARGETS
+    }
+
+    tasks = (
+        [(fetch_source, m) for m in MACROSES] +
+        [(fetch_dest, t) for t in TARGETS]
+    )
+
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        futures = {executor.submit(fn, arg): (fn, arg) for fn, arg in tasks}
+        for future in as_completed(futures):
+            target, direction, rules = future.result()
+            if direction == "->":
+                for rule in rules:
+                    rule_srcs = {s["machine_name"] for s in rule.get("sources", [])}
+                    if target not in rule_srcs:
+                        continue
+                    p = ports_str(rule)
+                    mobile = is_mobile(rule)
+                    until = until_date(rule)
+                    rule_id = rule.get("id")
+                    for dst in rule.get("destinations", []):
+                        out[target]["->"][dst["machine_name"]].add(p)
+                        if mobile:
+                            mob[target]["->"].add(dst["machine_name"])
+                        if until:
+                            exp[target]["->"][dst["machine_name"]].add(until)
+                        if rule_id:
+                            ids[target]["->"][dst["machine_name"]].add(rule_id)
+            else:
+                for rule in rules:
+                    rule_dsts = {d["machine_name"] for d in rule.get("destinations", [])}
+                    if target not in rule_dsts:
+                        continue
+                    p = ports_str(rule)
+                    mobile = is_mobile(rule)
+                    until = until_date(rule)
+                    rule_id = rule.get("id")
+                    for src in rule.get("sources", []):
+                        out[target]["<-"][src["machine_name"]].add(p)
+                        if mobile:
+                            mob[target]["<-"].add(src["machine_name"])
+                        if until:
+                            exp[target]["<-"][src["machine_name"]].add(until)
+                        if rule_id:
+                            ids[target]["<-"][src["machine_name"]].add(rule_id)
+
+    print()
+    for target in TARGETS:
+        egress = out[target]["->"]
+        ingress = out[target]["<-"]
+        if not egress and not ingress:
+            continue
+        print(f"{target}:")
+        for peer in sorted(ingress):
+            ports = ", ".join(sorted(ingress[peer]))
+            flag = " (+mobile)" if peer in mob[target]["<-"] else ""
+            until = expiry_flag(exp[target]["<-"].get(peer))
+            link = links(ids[target]["<-"].get(peer))
+            print(f"  <- {peer}: {ports}{flag}{until}{link}")
+        for peer in sorted(egress):
+            ports = ", ".join(sorted(egress[peer]))
+            flag = " (+mobile)" if peer in mob[target]["->"] else ""
+            until = expiry_flag(exp[target]["->"].get(peer))
+            link = links(ids[target]["->"].get(peer))
+            print(f"  -> {peer}: {ports}{flag}{until}{link}")
+        print()
+
+
+if __name__ == "__main__":
+    main()

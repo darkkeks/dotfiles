@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# claude-code из транка nixpkgs, но собранный один раз и прибитый gcroot-ом.
+# Запуск не трогает nix вообще. Обновление — руками: `claude --nix-update`.
+
+SHIM_DIR="${HOME}/.local/bin/arc-statham-claude"
+NIX_REF="github:NixOS/nixpkgs#claude-code"
+LINK_DIR="${XDG_STATE_HOME:-${HOME}/.local/state}/claude-nix"
+LINK="${LINK_DIR}/current"
+STALE_DAYS=14
+
+nix_update() {
+    mkdir -p "${LINK_DIR}"
+    NIXPKGS_ALLOW_UNFREE=1 nix build --impure --out-link "${LINK}" "${NIX_REF}"
+    printf 'claude: '
+    "${LINK}/bin/claude" --version
+}
+
+if [[ "${1:-}" == "--nix-update" ]]; then
+    nix_update
+    exit 0
+fi
+
+if [[ ! -x "${LINK}/bin/claude" ]]; then
+    echo "claude: собираю из nixpkgs (разово)..." >&2
+    nix_update >&2
+elif [[ -n "$(find "${LINK_DIR}" -maxdepth 1 -name current -mtime "+${STALE_DAYS}" 2>/dev/null)" ]]; then
+    echo "claude: сборке больше ${STALE_DAYS} дней, обновить — claude --nix-update" >&2
+fi
+
+if [[ ! -x "${SHIM_DIR}/arc-statham" ]]; then
+    ya tool arc-statham install --dir "${SHIM_DIR}"
+fi
+
+exec env PATH="${SHIM_DIR}:${PATH}" "${LINK}/bin/claude" "$@"

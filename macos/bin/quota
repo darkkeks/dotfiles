@@ -1,0 +1,272 @@
+#!/usr/bin/env python3
+"""
+Parse infractl quota error and create an ABC resource-request draft.
+
+Usage:
+    infractl make ... 2>&1 | python scripts/request-quota.py --service dikidi_backend
+    python scripts/request-quota.py --service dikidi_backend < error.txt
+
+The target service ID is parsed from the error URL, but can be overridden
+with --service <slug>. Auth: reads OAuth token from ~/.d/token.
+"""
+
+import argparse
+import json
+import math
+import re
+import sys
+from collections import defaultdict
+from dataclasses import dataclass
+from pathlib import Path
+
+import requests
+
+D_API = "https://d-api.yandex-team.ru"
+ABC_API = "https://abc-back.yandex-team.ru"
+YP_PROVIDER_ID = "8fa275cc-a1af-44d7-8ff6-e0dc1e7d0e6b"
+
+# ---------------------------------------------------------------------------
+# Parsing
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ResourceNeed:
+    name: str       # cpu_capacity, memory_limit, ...
+    amount: float
+    raw_unit: str   # cores, G, M/s, ...
+    cluster: str    # klg, sas, vla
+    segment: str    # default
+
+
+def parse_error(text: str) -> tuple[int | None, list[ResourceNeed]]:
+    """Extract service-in ID and per-cluster resource needs from infractl error."""
+    svc_match = re.search(r"abc\.yandex-team\.ru/services/(\d+)", text)
+    service_in = int(svc_match.group(1)) if svc_match else None
+
+    needs: list[ResourceNeed] = []
+    pat = re.compile(
+        r"(\w+):\s+([\d.]+)([\w/]+)\s+\(cluster:\s+(\w+),\s+segment:\s+(\w+)\)"
+    )
+    for m in pat.finditer(text):
+        name, amount, unit, cluster, segment = m.groups()
+        needs.append(ResourceNeed(name, float(amount), unit, cluster.lower(), segment))
+    if not needs:
+        raise SystemExit("No resource lines found in input")
+    return service_in, needs
+
+
+# ---------------------------------------------------------------------------
+# D API helpers
+# ---------------------------------------------------------------------------
+
+def get_token() -> str:
+    token_path = Path.home() / ".d" / "token"
+    if not token_path.exists():
+        raise SystemExit(f"Token file not found: {token_path}")
+    return token_path.read_text().strip()
+
+
+def d_session(token: str) -> requests.Session:
+    s = requests.Session()
+    s.headers.update({
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"OAuth {token}",
+        "accept-language": "ru-RU",
+    })
+    return s
+
+
+def get_resource_tree(sess: requests.Session, service_id: int) -> dict:
+    """Fetch YP provider resource selection tree for a service."""
+    resp = sess.post(
+        f"{D_API}/front/providers/_providersResourceSelectionTree",
+        json={"providerId": YP_PROVIDER_ID, "serviceIdForFilter": service_id},
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def resolve_service_slug(sess: requests.Session, slug: str) -> int:
+    """Resolve an ABC service slug to its numeric ID."""
+    resp = sess.get(f"{ABC_API}/api/v4/services/", params={"slug": slug})
+    resp.raise_for_status()
+    results = resp.json().get("results", [])
+    if not results:
+        raise SystemExit(f"ABC service not found: {slug!r}")
+    return results[0]["id"]
+
+
+def get_default_folder_id(sess: requests.Session, service_id: int) -> str:
+    resp = sess.get(f"{D_API}/front/services/{service_id}/folders/default")
+    resp.raise_for_status()
+    return resp.json()["folder"]["id"]
+
+
+def get_yp_account_id(sess: requests.Session, folder_id: str) -> str:
+    """Get the YP provider account ID for a folder."""
+    resp = sess.get(f"{D_API}/front/quotas/_folders", params={"folderIds": folder_id})
+    resp.raise_for_status()
+    data = resp.json()
+    for folder in data.get("folders", []):
+        for provider in folder.get("providers", []):
+            if provider.get("providerId") == YP_PROVIDER_ID:
+                accounts = provider.get("accounts", [])
+                if not accounts:
+                    raise SystemExit(f"No YP accounts found for folder {folder_id}")
+                return accounts[0]["account"]["id"]
+    raise SystemExit(f"YP provider not found in folder {folder_id}")
+
+
+def save_draft(sess: requests.Session, payload: dict, category: str) -> str:
+    resp = sess.post(
+        f"{D_API}/front/templates",
+        json={"content": json.dumps(payload), "category": category},
+    )
+    resp.raise_for_status()
+    return resp.text.strip().strip('"')
+
+
+# ---------------------------------------------------------------------------
+# Resource tree → lookup
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ResourceInfo:
+    resource_id: str
+    resource_type_id: str
+    default_unit_id: str
+    default_unit: str
+
+
+def build_resource_lookup(tree: dict) -> dict[tuple[str, str, str], ResourceInfo]:
+    """
+    Build lookup: (cluster_lower, segment, resource_type_key) → ResourceInfo
+    from the resource selection tree.
+    """
+    lookup: dict[tuple[str, str, str], ResourceInfo] = {}
+    provider_tree = tree["selectionResourceTreeByProviderId"][YP_PROVIDER_ID]
+
+    for cluster_name, cluster_node in provider_tree["childrenBySegmentId"].items():
+        for seg_name, seg_node in cluster_node["childrenBySegmentId"].items():
+            for r in seg_node["resources"]:
+                key = (cluster_name.lower(), seg_name, r["resourceTypeKey"])
+                lookup[key] = ResourceInfo(
+                    resource_id=r["id"],
+                    resource_type_id=r["resourceTypeId"],
+                    default_unit_id=r["defaultUnitId"],
+                    default_unit=r["defaultUnit"],
+                )
+    return lookup
+
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Create ABC resource-request draft from infractl quota error"
+    )
+    parser.add_argument(
+        "--service", type=str,
+        help="Target service slug (e.g. dikidi_backend). Overrides the service ID parsed from the error."
+    )
+    parser.add_argument(
+        "--description", default="infractl quota request",
+        help="Draft description"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Print the draft payload without submitting"
+    )
+    parser.add_argument(
+        "input", nargs="?", type=argparse.FileType("r"), default=sys.stdin,
+        help="File with infractl error (default: stdin)"
+    )
+    args = parser.parse_args()
+
+    text = args.input.read()
+    service_in, needs = parse_error(text)
+
+    token = get_token()
+    sess = d_session(token)
+
+    if args.service:
+        service_in = resolve_service_slug(sess, args.service)
+    elif service_in is None:
+        raise SystemExit("Could not find target service ID in error text. Pass --service <slug> to specify it.")
+
+    print(f"Target service (in): {service_in}", file=sys.stderr)
+
+    # Group needs by (cluster, segment)
+    by_cluster: dict[tuple[str, str], list[ResourceNeed]] = defaultdict(list)
+    for n in needs:
+        by_cluster[(n.cluster, n.segment)].append(n)
+
+    clusters = sorted(by_cluster.keys())
+    resource_names = sorted({n.name for n in needs})
+    print(f"Clusters: {[c for c, _ in clusters]}", file=sys.stderr)
+    print(f"Resources: {resource_names}", file=sys.stderr)
+
+    # Get resource tree and account for the target service
+    print("Fetching resource tree...", file=sys.stderr)
+    tree = get_resource_tree(sess, service_in)
+    lookup = build_resource_lookup(tree)
+
+    print("Fetching account...", file=sys.stderr)
+    folder_in = get_default_folder_id(sess, service_in)
+    account_in = get_yp_account_id(sess, folder_in)
+    print(f"Account in: {account_in}", file=sys.stderr)
+
+    # Build draft payload (reserveAccounts format)
+    segments_list = []
+    for (cluster, segment), cluster_needs in sorted(by_cluster.items()):
+        resources = []
+        for need in cluster_needs:
+            info = lookup.get((need.cluster, need.segment, need.name))
+            if not info:
+                print(f"WARNING: resource {need.name} not found for {need.cluster}/{need.segment}, skipping", file=sys.stderr)
+                continue
+            amount = str(math.ceil(need.amount))
+            resources.append({
+                "id": info.resource_id,
+                "typeId": info.resource_type_id,
+                "deltaAmountForEdit": amount,
+                "deltaAmount": amount,
+                "deltaUnitId": info.default_unit_id,
+                "deltaUnitIdForEdit": info.default_unit_id,
+            })
+
+        if resources:
+            segments_list.append({
+                "segments": [{
+                    "segmentName": segment,
+                    "accountInId": account_in,
+                    "resources": resources,
+                }],
+                "segmentName": cluster.upper(),
+            })
+
+    draft_content = {
+        "serviceIdIn": service_in,
+        "providers": [{
+            "id": YP_PROVIDER_ID,
+            "segments": segments_list,
+        }],
+        "reserveType": "SERVICE",
+        "description": args.description,
+        "expirationType": "forever",
+    }
+
+    if args.dry_run:
+        print(json.dumps(draft_content, indent=2, ensure_ascii=False))
+        return
+
+    print("Creating draft...", file=sys.stderr)
+    draft_id = save_draft(sess, draft_content, "reserveAccounts")
+    print(f"Draft created: https://abc.yandex-team.ru/quotas/transfers/create/?draft={draft_id}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+exec mysql --host db-test.dikidi.tech --user v.boben --password=$(cat ~/.dikidi-tokens/mysql_test_v.boben) --skip-ssl "$@"
