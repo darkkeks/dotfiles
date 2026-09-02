@@ -70,8 +70,11 @@ function doi {
 }
 
 # Ya tools
+alias aisuite="ya-tool aisuite"
+alias aws="ya-tool aws"
 alias cs="ya-tool cs"
 alias direct="ya-tool direct"
+alias dist2="ya-tool dist2"
 alias dnsclient="ya-tool dnsclient"
 alias grut="ya-tool grut"
 alias infractl="ya-tool infractl"
@@ -79,6 +82,7 @@ alias kubectl="ya-tool kubectl"
 alias logbroker="ya-tool logbroker"
 alias sky="ya-tool sky"
 alias tofu="ya-tool tofu"
+alias tvmknife="ya-tool tvmknife"
 alias yo="ya-tool yo"
 alias yp="ya-tool yp"
 alias yt="ya-tool yt"
